@@ -1,0 +1,453 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-02-10T12:00:00Z",
+    "tools": [
+      {
+        "vendor": "OWASP",
+        "name": "Dependency-Track",
+        "version": "4.11.0"
+      },
+      {
+        "vendor": "CycloneDX",
+        "name": "cyclonedx-cli",
+        "version": "0.27.1"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "id": "CVE-2024-38816",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-38816"
+      },
+      "ratings": [
+        {
+          "score": 9.8,
+          "severity": "critical",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "cwes": [22],
+      "description": "Path traversal vulnerability in Spring Framework allows unauthenticated attackers to access arbitrary files via crafted HTTP requests when serving static resources.",
+      "detail": "Applications serving static resources through the functional web frameworks WebMvc.fn or WebFlux.fn are vulnerable to path traversal attacks. An attacker can craft malicious HTTP requests and obtain any file on the file system that is also accessible to the process in which the Spring application is running.",
+      "recommendation": "Upgrade to Spring Framework 6.1.13 or later.",
+      "analysis": {
+        "state": "affected",
+        "detail": "The application uses Spring WebMvc.fn to serve static resources and is directly impacted by this vulnerability."
+      },
+      "affects": [
+        {
+          "ref": "pkg:maven/org.springframework/spring-webmvc@6.1.10"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-22262",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-22262"
+      },
+      "ratings": [
+        {
+          "score": 8.1,
+          "severity": "high",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N"
+        }
+      ],
+      "cwes": [601],
+      "description": "Open redirect and SSRF vulnerability in Spring Framework UriComponentsBuilder.",
+      "detail": "Applications that use UriComponentsBuilder to parse an externally provided URL and perform validation checks on the host of the parsed URL may be vulnerable to open redirect attacks or SSRF attacks.",
+      "recommendation": "Upgrade to Spring Framework 6.1.6, 6.0.19, or 5.3.34.",
+      "analysis": {
+        "state": "affected",
+        "detail": "URL validation logic uses UriComponentsBuilder with user-supplied input in the OAuth callback handler.",
+        "response": ["update"]
+      },
+      "affects": [
+        {
+          "ref": "pkg:maven/org.springframework/spring-web@6.1.4"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-45337",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-45337"
+      },
+      "ratings": [
+        {
+          "score": 9.1,
+          "severity": "critical",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+        }
+      ],
+      "cwes": [287],
+      "description": "Authentication bypass in golang.org/x/crypto/ssh ServerConfig callback handling allows unauthorized access.",
+      "detail": "The SSH server library mishandles the authentication handshake when the ServerConfig.PublicKeyCallback returns nil error with a non-nil Permissions value, allowing callers to incorrectly authorize connecting users.",
+      "recommendation": "Upgrade golang.org/x/crypto to v0.31.0 or later.",
+      "analysis": {
+        "state": "affected",
+        "detail": "Internal tooling uses the Go SSH server library with PublicKeyCallback. Confirmed vulnerable pattern in bastion host service."
+      },
+      "affects": [
+        {
+          "ref": "pkg:golang/golang.org/x/crypto@v0.28.0"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-3596",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-3596"
+      },
+      "ratings": [
+        {
+          "score": 9.0,
+          "severity": "critical",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "cwes": [328, 924],
+      "description": "RADIUS protocol susceptible to forgery attacks (Blast-RADIUS) due to use of MD5 response authenticator.",
+      "detail": "The RADIUS protocol under RFC 2865 is susceptible to forgery attacks by a local attacker who can modify responses from a RADIUS server via a chosen-prefix collision attack against MD5 Response Authenticator signature.",
+      "recommendation": "Enforce Message-Authenticator attribute on all RADIUS packets and migrate to RADIUS over TLS (RadSec).",
+      "analysis": {
+        "state": "not_affected",
+        "detail": "Our RADIUS deployment already enforces Message-Authenticator on all Access-Request and Access-Accept packets. The FreeRADIUS 3.2.5 configuration has been verified.",
+        "justification": "protected_by_mitigating_control"
+      },
+      "affects": [
+        {
+          "ref": "pkg:generic/freeradius@3.2.3"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-47176",
+      "source": {
+        "name": "SNYK",
+        "url": "https://security.snyk.io/vuln/SNYK-LINUX-CUPSFILTERS-7948498"
+      },
+      "ratings": [
+        {
+          "score": 7.5,
+          "severity": "high",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "cwes": [20],
+      "description": "cups-browsed binds to UDP INADDR_ANY:631, trusting any packet to trigger IPP request to attacker-controlled URL.",
+      "detail": "cups-browsed in CUPS 2.x binds on all network interfaces on UDP port 631, allowing remote unauthenticated attackers to send crafted packets causing cups-browsed to send a request to an attacker-controlled IPP URL.",
+      "recommendation": "Disable or remove cups-browsed. Upgrade CUPS to patched versions.",
+      "analysis": {
+        "state": "not_affected",
+        "detail": "cups-browsed is not installed or running on any production servers. Container images use distroless base.",
+        "justification": "component_not_present"
+      },
+      "affects": [
+        {
+          "ref": "pkg:deb/ubuntu/cups-browsed@2.0.0-0ubuntu10.1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-6387",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-6387"
+      },
+      "ratings": [
+        {
+          "score": 8.1,
+          "severity": "high",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "cwes": [362, 364],
+      "description": "RegreSSHion: Race condition in OpenSSH server signal handler leads to unauthenticated remote code execution.",
+      "detail": "A signal handler race condition was found in OpenSSH's server (sshd) where a client does not authenticate within LoginGraceTime seconds. An unauthenticated remote attacker may exploit this to execute arbitrary code as root on glibc-based Linux systems.",
+      "recommendation": "Upgrade to OpenSSH 9.8p1 or later. As a workaround, set LoginGraceTime to 0 in sshd_config.",
+      "analysis": {
+        "state": "affected",
+        "detail": "Jump hosts running OpenSSH 9.5p1 on Ubuntu 24.04 are confirmed vulnerable. Patch deployment in progress.",
+        "response": ["update"]
+      },
+      "affects": [
+        {
+          "ref": "pkg:deb/ubuntu/openssh-server@9.5p1-3ubuntu2"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-21626",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-21626"
+      },
+      "ratings": [
+        {
+          "score": 8.6,
+          "severity": "high",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "cwes": [403],
+      "description": "Container breakout through process.cwd manipulation and leaked file descriptors in runc.",
+      "detail": "runc is vulnerable to a container breakout via an attack where an attacker is able to use a leaked internal file descriptor to gain access to the host filesystem through /proc/self/cwd. This requires the ability to run custom container images or Dockerfiles.",
+      "recommendation": "Upgrade runc to 1.1.12 or later.",
+      "analysis": {
+        "state": "affected",
+        "detail": "Kubernetes cluster nodes running containerd 1.7.11 with runc 1.1.10 are affected. Upgrade scheduled for next maintenance window.",
+        "response": ["update"]
+      },
+      "affects": [
+        {
+          "ref": "pkg:golang/github.com/opencontainers/runc@v1.1.10"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-29944",
+      "source": {
+        "name": "OSS Index",
+        "url": "https://ossindex.sonatype.org/vulnerability/CVE-2024-29944"
+      },
+      "ratings": [
+        {
+          "score": 6.5,
+          "severity": "medium",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "cwes": [200],
+      "description": "Information disclosure in jackson-databind allows extraction of sensitive data through crafted polymorphic deserialization.",
+      "detail": "FasterXML jackson-databind before 2.17.1 allows attackers to extract sensitive information from the application's memory via specifically crafted input during polymorphic deserialization when default typing is enabled.",
+      "recommendation": "Upgrade jackson-databind to 2.17.1 or later. Disable DefaultTyping if not required.",
+      "analysis": {
+        "state": "affected",
+        "detail": "The reporting microservice uses DefaultTyping for message deserialization from the internal queue.",
+        "response": ["update"]
+      },
+      "affects": [
+        {
+          "ref": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.16.1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-35255",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-35255"
+      },
+      "ratings": [
+        {
+          "score": 5.5,
+          "severity": "medium",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "cwes": [362],
+      "description": "Elevation of privilege vulnerability in Azure Identity SDK due to race condition in token caching.",
+      "detail": "Azure Identity Libraries and Microsoft Authentication Library Elevation of Privilege Vulnerability. A race condition in the token cache can allow a local attacker to read tokens belonging to other users on the same system.",
+      "recommendation": "Upgrade Azure Identity SDK: .NET to 1.11.4, Java to 1.12.2, Python to 1.16.1, JS to 4.2.1, Go to 1.6.0.",
+      "analysis": {
+        "state": "affected",
+        "detail": "Python services running on shared AKS nodes use azure-identity 1.15.0. Token leakage risk between pods on the same node.",
+        "response": ["update"]
+      },
+      "affects": [
+        {
+          "ref": "pkg:pypi/azure-identity@1.15.0"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-4067",
+      "source": {
+        "name": "SNYK",
+        "url": "https://security.snyk.io/vuln/SNYK-JS-MICROMATCH-6838728"
+      },
+      "ratings": [
+        {
+          "score": 5.3,
+          "severity": "medium",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "cwes": [1333],
+      "description": "Regular expression Denial of Service (ReDoS) in micromatch when processing untrusted glob patterns.",
+      "detail": "The micromatch npm package before 4.0.8 is vulnerable to ReDoS via specially crafted glob patterns. Exploitable when user-supplied patterns are passed to braces or picomatch.",
+      "recommendation": "Upgrade micromatch to 4.0.8 or later.",
+      "analysis": {
+        "state": "not_affected",
+        "detail": "micromatch is only used at build time in the CI pipeline with hardcoded glob patterns. No user-supplied patterns are processed.",
+        "justification": "code_not_reachable"
+      },
+      "affects": [
+        {
+          "ref": "pkg:npm/micromatch@4.0.5"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-39338",
+      "source": {
+        "name": "OSS Index",
+        "url": "https://ossindex.sonatype.org/vulnerability/CVE-2024-39338"
+      },
+      "ratings": [
+        {
+          "score": 6.1,
+          "severity": "medium",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "cwes": [918],
+      "description": "Server-Side Request Forgery (SSRF) in axios when handling absolute URL overrides in follow-redirects.",
+      "detail": "Axios before 1.7.4 is vulnerable to SSRF via crafted absolute URLs that bypass the baseURL configuration. Attackers can cause the server-side client to make requests to unintended destinations.",
+      "recommendation": "Upgrade axios to 1.7.4 or later.",
+      "analysis": {
+        "state": "unknown",
+        "detail": "Axios is used in the BFF layer. Investigating whether user-controlled URLs can reach the vulnerable code path."
+      },
+      "affects": [
+        {
+          "ref": "pkg:npm/axios@1.6.7"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-24790",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-24790"
+      },
+      "ratings": [
+        {
+          "score": 4.3,
+          "severity": "medium",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "cwes": [180],
+      "description": "Incorrect IP address handling in Go net/netip allows bypass of IP-based access controls.",
+      "detail": "The various Is methods (IsPrivate, IsLoopback, etc.) did not work as expected for IPv4-mapped IPv6 addresses, potentially allowing incorrect classification and bypass of access control rules.",
+      "recommendation": "Upgrade Go to 1.22.4 or 1.21.11.",
+      "analysis": {
+        "state": "not_affected",
+        "detail": "Access control checks use net.IP (not netip.Addr). The vulnerable netip functions are not used anywhere in the codebase.",
+        "justification": "code_not_reachable"
+      },
+      "affects": [
+        {
+          "ref": "pkg:golang/stdlib@1.22.2"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-52302",
+      "source": {
+        "name": "SNYK",
+        "url": "https://security.snyk.io/vuln/SNYK-PYTHON-GRADIO-8285188"
+      },
+      "ratings": [
+        {
+          "score": 3.7,
+          "severity": "low",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "cwes": [200],
+      "description": "Information disclosure in Gradio allows unauthorized access to uploaded files via predictable file paths.",
+      "detail": "Gradio before 5.5.0 generates predictable temporary file paths for uploaded files. An attacker who can guess or enumerate the paths may access files uploaded by other users sharing the same Gradio server.",
+      "recommendation": "Upgrade Gradio to 5.5.0 or later.",
+      "analysis": {
+        "state": "not_affected",
+        "detail": "Gradio is only used in internal ML experimentation notebooks. Not deployed as a shared service. Single-user local usage only.",
+        "justification": "protected_by_mitigating_control"
+      },
+      "affects": [
+        {
+          "ref": "pkg:pypi/gradio@4.44.1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-45296",
+      "source": {
+        "name": "OSS Index",
+        "url": "https://ossindex.sonatype.org/vulnerability/CVE-2024-45296"
+      },
+      "ratings": [
+        {
+          "score": 3.1,
+          "severity": "low",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "cwes": [1333],
+      "description": "ReDoS vulnerability in path-to-regexp when processing malicious route patterns.",
+      "detail": "path-to-regexp before 0.1.10, 1.x before 1.9.0, 6.x before 6.3.0, and 8.x before 8.0.0 is vulnerable to ReDoS. Crafted route patterns with repeated optional groups cause exponential backtracking.",
+      "recommendation": "Upgrade path-to-regexp to the patched version for your major version.",
+      "analysis": {
+        "state": "unknown",
+        "detail": "Transitive dependency of Express.js. Evaluating if custom route patterns could trigger the ReDoS condition."
+      },
+      "affects": [
+        {
+          "ref": "pkg:npm/path-to-regexp@6.2.1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2024-34750",
+      "source": {
+        "name": "NVD",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-34750"
+      },
+      "ratings": [
+        {
+          "score": 7.5,
+          "severity": "high",
+          "method": "CVSSv31",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "cwes": [400],
+      "description": "Denial of service in Apache Tomcat via improper handling of HTTP/2 stream processing.",
+      "detail": "Improper Handling of Exceptional Conditions, Uncontrolled Resource Consumption vulnerability in Apache Tomcat. When processing an HTTP/2 stream, Tomcat did not handle some cases of excessive HTTP headers correctly. This led to a miscounting of active HTTP/2 streams which could lead to the use of an incorrect infinite timeout.",
+      "recommendation": "Upgrade to Apache Tomcat 11.0.0-M21, 10.1.25, or 9.0.90.",
+      "analysis": {
+        "state": "affected",
+        "detail": "API gateway runs Tomcat 10.1.18 with HTTP/2 enabled. Vulnerable to denial of service via malformed HTTP/2 header frames.",
+        "response": ["update"]
+      },
+      "affects": [
+        {
+          "ref": "pkg:maven/org.apache.tomcat/tomcat-coyote@10.1.18"
+        }
+      ]
+    }
+  ]
+}

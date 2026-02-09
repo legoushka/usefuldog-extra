@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - python-backend
+    environment:
+      - PYTHON_BACKEND_URL=http://python-backend:8001
+
+  python-backend:
+    build: ./backends/python
+    ports:
+      - "8001:8001"
