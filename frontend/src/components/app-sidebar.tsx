@@ -18,12 +18,12 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 const navItems = [
   {
-    title: "Dashboard",
+    title: "Панель управления",
     url: "/",
     icon: Home,
   },
   {
-    title: "VEX Converter",
+    title: "VEX Конвертер",
     url: "/tools/vex-converter",
     icon: FileSearch,
   },
@@ -43,7 +43,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Навигация</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
