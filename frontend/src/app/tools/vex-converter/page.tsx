@@ -25,9 +25,9 @@ export default function VexConverterPage() {
       setResult(data)
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`Server error (${err.status}): ${err.message}`)
+        setError(`Ошибка сервера (${err.status}): ${err.message}`)
       } else {
-        setError("Failed to process file. Please check the format and try again.")
+        setError("Не удалось обработать файл. Проверьте формат и попробуйте снова.")
       }
     } finally {
       setIsLoading(false)
@@ -37,9 +37,9 @@ export default function VexConverterPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">VEX Converter</h1>
+        <h1 className="text-2xl font-bold tracking-tight">VEX Конвертер</h1>
         <p className="text-muted-foreground">
-          Upload a CSAF VEX JSON document to generate Confluence wiki markup
+          Загрузите CSAF VEX JSON документ для генерации Confluence wiki-разметки
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export default function VexConverterPage() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>Ошибка</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

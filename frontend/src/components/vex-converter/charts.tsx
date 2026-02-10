@@ -50,7 +50,7 @@ export function SeverityChart({ stats }: ChartsProps) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">
-          Severity Distribution
+          Распределение по критичности
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -93,7 +93,7 @@ export function StateChart({ stats }: ChartsProps) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">
-          Analysis State
+          Состояние анализа
         </CardTitle>
       </CardHeader>
       <CardContent>

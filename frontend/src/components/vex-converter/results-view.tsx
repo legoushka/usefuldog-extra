@@ -14,8 +14,8 @@ export function ResultsView({ markup }: ResultsViewProps) {
     <Tabs defaultValue="preview" className="w-full">
       <div className="flex items-center justify-between">
         <TabsList>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="markup">Markup</TabsTrigger>
+          <TabsTrigger value="preview">Предпросмотр</TabsTrigger>
+          <TabsTrigger value="markup">Разметка</TabsTrigger>
         </TabsList>
         <CopyButton text={markup} />
       </div>

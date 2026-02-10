@@ -5,11 +5,11 @@ import { FileSearch } from "lucide-react"
 
 const tools = [
   {
-    title: "VEX Converter",
-    description: "Convert CSAF VEX JSON documents to Confluence wiki markup with vulnerability analysis charts.",
+    title: "VEX Конвертер",
+    description: "Конвертация CSAF VEX JSON документов в Confluence wiki-разметку с графиками анализа уязвимостей.",
     href: "/tools/vex-converter",
     icon: FileSearch,
-    status: "Active" as const,
+    status: "Активен" as const,
   },
 ]
 
@@ -17,9 +17,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Панель управления</h1>
         <p className="text-muted-foreground">
-          Security tooling and utilities
+          Инструменты безопасности и утилиты
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

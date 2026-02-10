@@ -62,10 +62,10 @@ export function UploadZone({ onFileSelect, isLoading }: UploadZoneProps) {
           </div>
           <div className="text-center">
             <p className="text-sm font-medium">
-              {isLoading ? "Processing..." : "Drop CSAF VEX JSON file here"}
+              {isLoading ? "Обработка..." : "Перетащите CSAF VEX JSON файл сюда"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              or click to browse
+              или нажмите для выбора
             </p>
           </div>
           <input
