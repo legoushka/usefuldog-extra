@@ -1,0 +1,91 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:c3d4e5f6-a7b8-9012-cdef-345678901234",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-04-20T15:30:00Z",
+    "component": {
+      "type": "application",
+      "name": "broken-hierarchy-app",
+      "version": "0.1.0",
+      "bom-ref": "broken-hierarchy-app@0.1.0"
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "parent-service",
+      "version": "1.0.0",
+      "bom-ref": "parent-service@1.0.0",
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "no" },
+        { "name": "cdx:gost:security_function", "value": "no" }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "child-with-higher-as",
+          "version": "2.0.0",
+          "bom-ref": "child-higher-as@2.0.0",
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "yes" },
+            { "name": "cdx:gost:security_function", "value": "no" }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "child-with-higher-sf",
+          "version": "3.0.0",
+          "bom-ref": "child-higher-sf@3.0.0",
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "no" },
+            { "name": "cdx:gost:security_function", "value": "indirect" }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "child-ok",
+          "version": "1.0.0",
+          "bom-ref": "child-ok@1.0.0",
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "no" },
+            { "name": "cdx:gost:security_function", "value": "no" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "another-parent",
+      "version": "1.0.0",
+      "bom-ref": "another-parent@1.0.0",
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "indirect" },
+        { "name": "cdx:gost:security_function", "value": "indirect" }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "child-indirect-ok",
+          "version": "1.0.0",
+          "bom-ref": "child-indirect-ok@1.0.0",
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "indirect" },
+            { "name": "cdx:gost:security_function", "value": "no" }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "child-yes-breaks",
+          "version": "1.0.0",
+          "bom-ref": "child-yes-breaks@1.0.0",
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "yes" },
+            { "name": "cdx:gost:security_function", "value": "yes" }
+          ]
+        }
+      ]
+    }
+  ]
+}

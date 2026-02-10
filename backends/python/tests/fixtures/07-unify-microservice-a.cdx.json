@@ -1,0 +1,63 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:f6a7b8c9-d0e1-2345-f012-678901234567",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-08-01T10:00:00Z",
+    "component": {
+      "type": "application",
+      "name": "user-service",
+      "version": "2.3.0",
+      "group": "ru.company",
+      "bom-ref": "ru.company/user-service@2.3.0"
+    }
+  },
+  "components": [
+    {
+      "type": "framework",
+      "name": "spring-boot",
+      "version": "3.3.0",
+      "group": "org.springframework.boot",
+      "bom-ref": "spring-boot@3.3.0",
+      "purl": "pkg:maven/org.springframework.boot/spring-boot@3.3.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "indirect" },
+        { "name": "cdx:gost:security_function", "value": "indirect" }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "spring-security",
+      "version": "6.3.0",
+      "group": "org.springframework.security",
+      "bom-ref": "spring-security@6.3.0",
+      "purl": "pkg:maven/org.springframework.security/spring-security-core@6.3.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "yes" },
+        { "name": "cdx:gost:security_function", "value": "yes" }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "hibernate",
+      "version": "6.4.0",
+      "group": "org.hibernate",
+      "bom-ref": "hibernate@6.4.0",
+      "purl": "pkg:maven/org.hibernate.orm/hibernate-core@6.4.0",
+      "licenses": [{ "license": { "id": "LGPL-2.1-only" } }],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "indirect" },
+        { "name": "cdx:gost:security_function", "value": "no" }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "ru.company/user-service@2.3.0",
+      "dependsOn": ["spring-boot@3.3.0", "spring-security@6.3.0", "hibernate@6.4.0"]
+    }
+  ]
+}

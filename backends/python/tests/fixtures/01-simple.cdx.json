@@ -1,0 +1,69 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-03-10T12:00:00Z",
+    "component": {
+      "type": "application",
+      "name": "simple-web-app",
+      "version": "1.0.0",
+      "bom-ref": "simple-web-app@1.0.0"
+    },
+    "manufacturer": {
+      "name": "ООО Тест"
+    },
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "cdxgen",
+          "version": "10.5.0",
+          "group": "@cyclonedx"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "express",
+      "version": "4.18.2",
+      "bom-ref": "express@4.18.2",
+      "purl": "pkg:npm/express@4.18.2",
+      "licenses": [
+        { "license": { "id": "MIT" } }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "lodash",
+      "version": "4.17.21",
+      "bom-ref": "lodash@4.17.21",
+      "purl": "pkg:npm/lodash@4.17.21",
+      "licenses": [
+        { "license": { "id": "MIT" } }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pg",
+      "version": "8.11.3",
+      "bom-ref": "pg@8.11.3",
+      "purl": "pkg:npm/pg@8.11.3",
+      "licenses": [
+        { "license": { "id": "MIT" } }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "simple-web-app@1.0.0",
+      "dependsOn": ["express@4.18.2", "lodash@4.17.21", "pg@8.11.3"]
+    },
+    { "ref": "express@4.18.2", "dependsOn": [] },
+    { "ref": "lodash@4.17.21", "dependsOn": [] },
+    { "ref": "pg@8.11.3", "dependsOn": [] }
+  ]
+}

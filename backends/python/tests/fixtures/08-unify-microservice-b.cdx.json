@@ -1,0 +1,76 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:a7b8c9d0-e1f2-3456-0123-789012345678",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-08-01T10:05:00Z",
+    "component": {
+      "type": "application",
+      "name": "order-service",
+      "version": "1.7.0",
+      "group": "ru.company",
+      "bom-ref": "ru.company/order-service@1.7.0"
+    }
+  },
+  "components": [
+    {
+      "type": "framework",
+      "name": "spring-boot",
+      "version": "3.3.0",
+      "group": "org.springframework.boot",
+      "bom-ref": "spring-boot@3.3.0",
+      "purl": "pkg:maven/org.springframework.boot/spring-boot@3.3.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "indirect" },
+        { "name": "cdx:gost:security_function", "value": "indirect" }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "kafka-clients",
+      "version": "3.7.0",
+      "group": "org.apache.kafka",
+      "bom-ref": "kafka-clients@3.7.0",
+      "purl": "pkg:maven/org.apache.kafka/kafka-clients@3.7.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "indirect" },
+        { "name": "cdx:gost:security_function", "value": "no" }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "jackson-databind",
+      "version": "2.17.0",
+      "group": "com.fasterxml.jackson.core",
+      "bom-ref": "jackson-databind@2.17.0",
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.17.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "indirect" },
+        { "name": "cdx:gost:security_function", "value": "no" }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "micrometer",
+      "version": "1.13.0",
+      "group": "io.micrometer",
+      "bom-ref": "micrometer@1.13.0",
+      "purl": "pkg:maven/io.micrometer/micrometer-core@1.13.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "no" },
+        { "name": "cdx:gost:security_function", "value": "no" }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "ru.company/order-service@1.7.0",
+      "dependsOn": ["spring-boot@3.3.0", "kafka-clients@3.7.0", "jackson-databind@2.17.0", "micrometer@1.13.0"]
+    }
+  ]
+}

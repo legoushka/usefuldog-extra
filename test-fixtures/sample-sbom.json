@@ -1,0 +1,297 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-01-15T10:30:00Z",
+    "component": {
+      "type": "application",
+      "name": "example-app",
+      "version": "2.1.0",
+      "group": "com.example",
+      "bom-ref": "com.example/example-app@2.1.0"
+    },
+    "manufacturer": {
+      "name": "ООО Пример"
+    },
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "cdxgen",
+          "version": "10.0.0",
+          "group": "@cyclonedx"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "backend-service",
+      "version": "1.5.0",
+      "group": "com.example",
+      "bom-ref": "com.example/backend-service@1.5.0",
+      "description": "Основной бэкенд-сервис",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:gost:attack_surface",
+          "value": "yes"
+        },
+        {
+          "name": "cdx:gost:security_function",
+          "value": "yes"
+        },
+        {
+          "name": "cdx:gost:provided_by",
+          "value": "ООО Пример"
+        },
+        {
+          "name": "cdx:gost:source_langs",
+          "value": "Java, Kotlin"
+        }
+      ],
+      "components": [
+        {
+          "type": "framework",
+          "name": "spring-boot",
+          "version": "3.2.0",
+          "group": "org.springframework.boot",
+          "bom-ref": "org.springframework.boot/spring-boot@3.2.0",
+          "purl": "pkg:maven/org.springframework.boot/spring-boot@3.2.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "Apache-2.0"
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:gost:attack_surface",
+              "value": "indirect"
+            },
+            {
+              "name": "cdx:gost:security_function",
+              "value": "indirect"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "jackson-databind",
+          "version": "2.16.1",
+          "group": "com.fasterxml.jackson.core",
+          "bom-ref": "com.fasterxml.jackson.core/jackson-databind@2.16.1",
+          "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.16.1",
+          "licenses": [
+            {
+              "license": {
+                "id": "Apache-2.0"
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:gost:attack_surface",
+              "value": "indirect"
+            },
+            {
+              "name": "cdx:gost:security_function",
+              "value": "no"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "logback-classic",
+          "version": "1.4.14",
+          "group": "ch.qos.logback",
+          "bom-ref": "ch.qos.logback/logback-classic@1.4.14",
+          "purl": "pkg:maven/ch.qos.logback/logback-classic@1.4.14",
+          "licenses": [
+            {
+              "license": {
+                "id": "LGPL-2.1-only"
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:gost:attack_surface",
+              "value": "no"
+            },
+            {
+              "name": "cdx:gost:security_function",
+              "value": "no"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "frontend-app",
+      "version": "3.0.0",
+      "group": "com.example",
+      "bom-ref": "com.example/frontend-app@3.0.0",
+      "description": "Веб-интерфейс приложения",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:gost:attack_surface",
+          "value": "yes"
+        },
+        {
+          "name": "cdx:gost:security_function",
+          "value": "indirect"
+        },
+        {
+          "name": "cdx:gost:source_langs",
+          "value": "TypeScript"
+        }
+      ],
+      "components": [
+        {
+          "type": "framework",
+          "name": "react",
+          "version": "19.0.0",
+          "group": "facebook",
+          "bom-ref": "facebook/react@19.0.0",
+          "purl": "pkg:npm/react@19.0.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:gost:attack_surface",
+              "value": "indirect"
+            },
+            {
+              "name": "cdx:gost:security_function",
+              "value": "no"
+            }
+          ]
+        },
+        {
+          "type": "framework",
+          "name": "next",
+          "version": "15.0.0",
+          "group": "vercel",
+          "bom-ref": "vercel/next@15.0.0",
+          "purl": "pkg:npm/next@15.0.0",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:gost:attack_surface",
+              "value": "yes"
+            },
+            {
+              "name": "cdx:gost:security_function",
+              "value": "indirect"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "axios",
+          "version": "1.6.7",
+          "bom-ref": "axios@1.6.7",
+          "purl": "pkg:npm/axios@1.6.7",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:gost:attack_surface",
+              "value": "indirect"
+            },
+            {
+              "name": "cdx:gost:security_function",
+              "value": "no"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "postgresql-driver",
+      "version": "42.7.1",
+      "group": "org.postgresql",
+      "bom-ref": "org.postgresql/postgresql-driver@42.7.1",
+      "purl": "pkg:maven/org.postgresql/postgresql@42.7.1",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:gost:attack_surface",
+          "value": "indirect"
+        },
+        {
+          "name": "cdx:gost:security_function",
+          "value": "no"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "com.example/example-app@2.1.0",
+      "dependsOn": [
+        "com.example/backend-service@1.5.0",
+        "com.example/frontend-app@3.0.0",
+        "org.postgresql/postgresql-driver@42.7.1"
+      ]
+    },
+    {
+      "ref": "com.example/backend-service@1.5.0",
+      "dependsOn": [
+        "org.springframework.boot/spring-boot@3.2.0",
+        "com.fasterxml.jackson.core/jackson-databind@2.16.1",
+        "ch.qos.logback/logback-classic@1.4.14"
+      ]
+    },
+    {
+      "ref": "com.example/frontend-app@3.0.0",
+      "dependsOn": [
+        "facebook/react@19.0.0",
+        "vercel/next@15.0.0",
+        "axios@1.6.7"
+      ]
+    }
+  ]
+}

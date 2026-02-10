@@ -35,9 +35,14 @@ npm run lint                     # ESLint
 ### Python backend development
 ```bash
 cd backends/python
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+uv run --with-requirements requirements.txt uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+# Или для одноразовых проверок:
+uv run --with-requirements requirements.txt python -c "from main import app; print('OK')"
+# Запуск тестов:
+uv run --with-requirements requirements.txt pytest -v
 ```
+
+> **Note:** Используем `uv` вместо pip/venv. Не нужно создавать виртуальное окружение — `uv run` управляет зависимостями автоматически.
 
 ## Key Data Flow
 

@@ -1,0 +1,60 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:e5f6a7b8-c9d0-1234-ef01-567890123456",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-07-01T10:00:00Z",
+    "component": {
+      "type": "application",
+      "name": "large-npm-project",
+      "version": "5.0.0",
+      "bom-ref": "large-npm-project@5.0.0"
+    },
+    "manufacturer": {
+      "name": "Big Corp"
+    }
+  },
+  "components": [
+    { "type": "framework", "name": "next", "version": "15.1.0", "bom-ref": "next@15.1.0", "purl": "pkg:npm/next@15.1.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "framework", "name": "react", "version": "19.0.0", "bom-ref": "react@19.0.0", "purl": "pkg:npm/react@19.0.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "react-dom", "version": "19.0.0", "bom-ref": "react-dom@19.0.0", "purl": "pkg:npm/react-dom@19.0.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "typescript", "version": "5.6.0", "bom-ref": "typescript@5.6.0", "purl": "pkg:npm/typescript@5.6.0", "licenses": [{"license": {"id": "Apache-2.0"}}] },
+    { "type": "library", "name": "tailwindcss", "version": "4.0.0", "bom-ref": "tailwindcss@4.0.0", "purl": "pkg:npm/tailwindcss@4.0.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "postcss", "version": "8.4.31", "bom-ref": "postcss@8.4.31", "purl": "pkg:npm/postcss@8.4.31", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "autoprefixer", "version": "10.4.16", "bom-ref": "autoprefixer@10.4.16", "purl": "pkg:npm/autoprefixer@10.4.16", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "eslint", "version": "9.15.0", "bom-ref": "eslint@9.15.0", "purl": "pkg:npm/eslint@9.15.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "prettier", "version": "3.2.0", "bom-ref": "prettier@3.2.0", "purl": "pkg:npm/prettier@3.2.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "axios", "version": "1.7.0", "bom-ref": "axios@1.7.0", "purl": "pkg:npm/axios@1.7.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "zod", "version": "3.23.0", "bom-ref": "zod@3.23.0", "purl": "pkg:npm/zod@3.23.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "zustand", "version": "5.0.0", "bom-ref": "zustand@5.0.0", "purl": "pkg:npm/zustand@5.0.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "date-fns", "version": "3.6.0", "bom-ref": "date-fns@3.6.0", "purl": "pkg:npm/date-fns@3.6.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "lucide-react", "version": "0.400.0", "bom-ref": "lucide-react@0.400.0", "purl": "pkg:npm/lucide-react@0.400.0", "licenses": [{"license": {"id": "ISC"}}] },
+    { "type": "library", "name": "clsx", "version": "2.1.1", "bom-ref": "clsx@2.1.1", "purl": "pkg:npm/clsx@2.1.1", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "tailwind-merge", "version": "2.5.0", "bom-ref": "tailwind-merge@2.5.0", "purl": "pkg:npm/tailwind-merge@2.5.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "recharts", "version": "2.12.0", "bom-ref": "recharts@2.12.0", "purl": "pkg:npm/recharts@2.12.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "class-variance-authority", "version": "0.7.1", "bom-ref": "cva@0.7.1", "purl": "pkg:npm/class-variance-authority@0.7.1", "licenses": [{"license": {"id": "Apache-2.0"}}] },
+    { "type": "library", "name": "next-themes", "version": "0.4.0", "bom-ref": "next-themes@0.4.0", "purl": "pkg:npm/next-themes@0.4.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "sharp", "version": "0.33.0", "bom-ref": "sharp@0.33.0", "purl": "pkg:npm/sharp@0.33.0", "licenses": [{"license": {"id": "Apache-2.0"}}] },
+    { "type": "library", "name": "jsonwebtoken", "version": "9.0.2", "bom-ref": "jsonwebtoken@9.0.2", "purl": "pkg:npm/jsonwebtoken@9.0.2", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "bcryptjs", "version": "2.4.3", "bom-ref": "bcryptjs@2.4.3", "purl": "pkg:npm/bcryptjs@2.4.3", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "helmet", "version": "7.1.0", "bom-ref": "helmet@7.1.0", "purl": "pkg:npm/helmet@7.1.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "cors", "version": "2.8.5", "bom-ref": "cors@2.8.5", "purl": "pkg:npm/cors@2.8.5", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "dotenv", "version": "16.4.0", "bom-ref": "dotenv@16.4.0", "purl": "pkg:npm/dotenv@16.4.0", "licenses": [{"license": {"id": "BSD-2-Clause"}}] },
+    { "type": "library", "name": "winston", "version": "3.14.0", "bom-ref": "winston@3.14.0", "purl": "pkg:npm/winston@3.14.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "ioredis", "version": "5.4.0", "bom-ref": "ioredis@5.4.0", "purl": "pkg:npm/ioredis@5.4.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "pg", "version": "8.12.0", "bom-ref": "pg@8.12.0", "purl": "pkg:npm/pg@8.12.0", "licenses": [{"license": {"id": "MIT"}}] },
+    { "type": "library", "name": "drizzle-orm", "version": "0.33.0", "bom-ref": "drizzle-orm@0.33.0", "purl": "pkg:npm/drizzle-orm@0.33.0", "licenses": [{"license": {"id": "Apache-2.0"}}] },
+    { "type": "library", "name": "vitest", "version": "2.1.0", "bom-ref": "vitest@2.1.0", "purl": "pkg:npm/vitest@2.1.0", "licenses": [{"license": {"id": "MIT"}}] }
+  ],
+  "dependencies": [
+    {
+      "ref": "large-npm-project@5.0.0",
+      "dependsOn": [
+        "next@15.1.0", "react@19.0.0", "react-dom@19.0.0", "typescript@5.6.0",
+        "tailwindcss@4.0.0", "axios@1.7.0", "zod@3.23.0", "zustand@5.0.0",
+        "lucide-react@0.400.0", "recharts@2.12.0", "pg@8.12.0", "drizzle-orm@0.33.0"
+      ]
+    }
+  ]
+}

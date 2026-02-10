@@ -1,0 +1,19 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "components": [
+    {
+      "name": "no-type-component",
+      "version": "1.0.0"
+    },
+    {
+      "type": "library"
+    },
+    {
+      "type": "banana",
+      "name": "wrong-type-lib",
+      "version": "0.0.1"
+    }
+  ]
+}
