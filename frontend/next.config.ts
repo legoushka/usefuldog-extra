@@ -10,7 +10,10 @@ const nextConfig: NextConfig = {
         source: "/api/tools/vex/:path*",
         destination: `${pythonBackendUrl}/api/:path*`,
       },
-      // future: { source: '/api/tools/go/:path*', destination: 'http://go-backend:8002/api/:path*' }
+      {
+        source: "/api/tools/sbom/:path*",
+        destination: `${pythonBackendUrl}/api/sbom/:path*`,
+      },
     ]
   },
 }

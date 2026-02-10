@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileSearch } from "lucide-react"
+import { FileSearch, FileCode2 } from "lucide-react"
 
 const tools = [
   {
@@ -9,6 +9,13 @@ const tools = [
     description: "Конвертация CSAF VEX JSON документов в Confluence wiki-разметку с графиками анализа уязвимостей.",
     href: "/tools/vex-converter",
     icon: FileSearch,
+    status: "Активен" as const,
+  },
+  {
+    title: "SBOM Редактор",
+    description: "Просмотр, редактирование, объединение и валидация CycloneDX SBOM с поддержкой ФСТЭК-расширений.",
+    href: "/tools/sbom-editor",
+    icon: FileCode2,
     status: "Активен" as const,
   },
 ]

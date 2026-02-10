@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, FileSearch, Wrench } from "lucide-react"
+import { Home, FileSearch, FileCode2, Wrench } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -27,6 +27,11 @@ const navItems = [
     url: "/tools/vex-converter",
     icon: FileSearch,
   },
+  {
+    title: "SBOM Редактор",
+    url: "/tools/sbom-editor",
+    icon: FileCode2,
+  },
 ]
 
 export function AppSidebar() {
@@ -48,7 +53,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
+                  <SidebarMenuButton asChild isActive={item.url === "/" ? pathname === "/" : pathname.startsWith(item.url)}>
                     <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>

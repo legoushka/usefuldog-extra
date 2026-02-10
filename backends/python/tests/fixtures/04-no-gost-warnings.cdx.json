@@ -1,0 +1,45 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:d4e5f6a7-b8c9-0123-def0-456789012345",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-05-15T08:00:00Z",
+    "component": {
+      "type": "application",
+      "name": "partial-gost-app",
+      "version": "1.0.0",
+      "bom-ref": "partial-gost-app@1.0.0"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "lib-with-gost",
+      "version": "1.0.0",
+      "bom-ref": "lib-with-gost@1.0.0",
+      "licenses": [
+        { "license": { "id": "MIT" } }
+      ],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "yes" },
+        { "name": "cdx:gost:security_function", "value": "indirect" }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "lib-without-gost",
+      "version": "2.0.0",
+      "bom-ref": "lib-without-gost@2.0.0",
+      "licenses": [
+        { "license": { "id": "Apache-2.0" } }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "another-no-gost",
+      "version": "3.5.0",
+      "bom-ref": "another-no-gost@3.5.0"
+    }
+  ]
+}

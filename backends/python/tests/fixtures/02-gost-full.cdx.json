@@ -1,0 +1,167 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:b2c3d4e5-f6a7-8901-bcde-f23456789012",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-06-01T09:00:00Z",
+    "component": {
+      "type": "application",
+      "name": "secure-platform",
+      "version": "3.2.1",
+      "group": "ru.example",
+      "bom-ref": "ru.example/secure-platform@3.2.1"
+    },
+    "manufacturer": {
+      "name": "ООО СекьюрСофт"
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "auth-service",
+      "version": "2.0.0",
+      "group": "ru.example",
+      "bom-ref": "ru.example/auth-service@2.0.0",
+      "description": "Сервис аутентификации и авторизации",
+      "licenses": [
+        { "license": { "id": "Apache-2.0" } }
+      ],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "yes" },
+        { "name": "cdx:gost:security_function", "value": "yes" },
+        { "name": "cdx:gost:provided_by", "value": "ООО СекьюрСофт" },
+        { "name": "cdx:gost:source_langs", "value": "Go" }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "golang-jwt",
+          "version": "5.2.0",
+          "group": "github.com/golang-jwt",
+          "bom-ref": "golang-jwt@5.2.0",
+          "purl": "pkg:golang/github.com/golang-jwt/jwt/v5@5.2.0",
+          "licenses": [
+            { "license": { "id": "MIT" } }
+          ],
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "yes" },
+            { "name": "cdx:gost:security_function", "value": "yes" }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "bcrypt",
+          "version": "0.15.0",
+          "group": "golang.org/x/crypto",
+          "bom-ref": "x-crypto-bcrypt@0.15.0",
+          "purl": "pkg:golang/golang.org/x/crypto@0.15.0",
+          "licenses": [
+            { "license": { "id": "BSD-3-Clause" } }
+          ],
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "indirect" },
+            { "name": "cdx:gost:security_function", "value": "yes" }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "zap",
+          "version": "1.27.0",
+          "group": "go.uber.org",
+          "bom-ref": "zap@1.27.0",
+          "purl": "pkg:golang/go.uber.org/zap@1.27.0",
+          "licenses": [
+            { "license": { "id": "MIT" } }
+          ],
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "no" },
+            { "name": "cdx:gost:security_function", "value": "no" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "api-gateway",
+      "version": "1.8.0",
+      "group": "ru.example",
+      "bom-ref": "ru.example/api-gateway@1.8.0",
+      "description": "API-шлюз с rate limiting и WAF",
+      "licenses": [
+        { "license": { "id": "Apache-2.0" } }
+      ],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "yes" },
+        { "name": "cdx:gost:security_function", "value": "indirect" },
+        { "name": "cdx:gost:provided_by", "value": "ООО СекьюрСофт" },
+        { "name": "cdx:gost:source_langs", "value": "Go" }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "gin",
+          "version": "1.9.1",
+          "group": "github.com/gin-gonic",
+          "bom-ref": "gin@1.9.1",
+          "purl": "pkg:golang/github.com/gin-gonic/gin@1.9.1",
+          "licenses": [
+            { "license": { "id": "MIT" } }
+          ],
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "yes" },
+            { "name": "cdx:gost:security_function", "value": "no" }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "redis",
+          "version": "9.3.0",
+          "group": "github.com/redis/go-redis",
+          "bom-ref": "go-redis@9.3.0",
+          "purl": "pkg:golang/github.com/redis/go-redis/v9@9.3.0",
+          "licenses": [
+            { "license": { "id": "BSD-2-Clause" } }
+          ],
+          "properties": [
+            { "name": "cdx:gost:attack_surface", "value": "indirect" },
+            { "name": "cdx:gost:security_function", "value": "no" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "prometheus-client",
+      "version": "1.18.0",
+      "group": "github.com/prometheus",
+      "bom-ref": "prometheus-client@1.18.0",
+      "purl": "pkg:golang/github.com/prometheus/client_golang@1.18.0",
+      "licenses": [
+        { "license": { "id": "Apache-2.0" } }
+      ],
+      "properties": [
+        { "name": "cdx:gost:attack_surface", "value": "no" },
+        { "name": "cdx:gost:security_function", "value": "no" }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "ru.example/secure-platform@3.2.1",
+      "dependsOn": [
+        "ru.example/auth-service@2.0.0",
+        "ru.example/api-gateway@1.8.0",
+        "prometheus-client@1.18.0"
+      ]
+    },
+    {
+      "ref": "ru.example/auth-service@2.0.0",
+      "dependsOn": ["golang-jwt@5.2.0", "x-crypto-bcrypt@0.15.0", "zap@1.27.0"]
+    },
+    {
+      "ref": "ru.example/api-gateway@1.8.0",
+      "dependsOn": ["gin@1.9.1", "go-redis@9.3.0"]
+    }
+  ]
+}
