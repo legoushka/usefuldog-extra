@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
         source: "/api/tools/sbom/:path*",
         destination: `${pythonBackendUrl}/api/sbom/:path*`,
       },
+      {
+        source: "/api/projects/:path*",
+        destination: `${pythonBackendUrl}/api/projects/:path*`,
+      },
     ]
   },
 }

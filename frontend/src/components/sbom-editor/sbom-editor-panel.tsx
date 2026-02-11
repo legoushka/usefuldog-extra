@@ -5,13 +5,18 @@ import { Button } from "@/components/ui/button"
 import { SbomVisualEditor } from "./sbom-visual-editor"
 import { SbomTextEditor } from "./sbom-text-editor"
 import { SbomDownloadButton } from "./sbom-download-button"
-import type { CycloneDxBom } from "@/lib/sbom-types"
+import type { CycloneDxBom, ValidateResponse } from "@/lib/sbom-types"
+import type { SbomMetadata } from "@/lib/project-types"
 
 interface EditorPanelProps {
   bom: CycloneDxBom
   selectedPath: number[] | null
   onSelectPath: (path: number[]) => void
   onChange: (updated: CycloneDxBom) => void
+  validationResults?: ValidateResponse | null
+  projectId?: string | null
+  savedSboms?: SbomMetadata[]
+  currentSbomId?: string
 }
 
 export function SbomEditorPanel({
@@ -19,6 +24,10 @@ export function SbomEditorPanel({
   selectedPath,
   onSelectPath,
   onChange,
+  validationResults,
+  projectId,
+  savedSboms,
+  currentSbomId,
 }: EditorPanelProps) {
   const [editorMode, setEditorMode] = useState<"visual" | "text">("visual")
   const [textValue, setTextValue] = useState("")
@@ -87,6 +96,10 @@ export function SbomEditorPanel({
           selectedPath={selectedPath}
           onSelectPath={onSelectPath}
           onChange={onChange}
+          validationResults={validationResults}
+          projectId={projectId}
+          savedSboms={savedSboms}
+          currentSbomId={currentSbomId}
         />
       ) : (
         <SbomTextEditor
