@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-02-11
+
+### Added
+- Add component dialog with target selector (root/child) and import-from-project-SBOM mode
+- All component fields available in add dialog (scope, group, PURL, CPE, VCS, description, GOST)
+- Inline validation errors and warnings displayed directly in component tree
+- VCS URL field in component edit form
+- Select all / deselect all in batch GOST editor
+- One-click "Add empty GOST fields" button for all components
+- Collapsible file explorer sidebar with localStorage persistence
+- Project SBOM selection in Unifier tab
+
+### Changed
+- Main navigation sidebar collapsed by default (icon-only strip, expandable)
+- Removed "Просмотр" and "Валидация" tabs — validation integrated into editor view
+- "Add component" moved from inline panel to dialog with explicit target selection
+- "Import SBOM as component" merged into add component dialog
+- Toolbar buttons (GOST fields, batch editor) left-aligned above component grid
+
+### Fixed
+- Stale component form when switching between components (key-based remount)
+- Validation issue matching uses JSONPath parsing instead of flaky bom-ref string matching
+- Backend now warns about empty GOST field values
+
 ## [0.2.0] - 2026-02-11
 
 ### Added
@@ -73,5 +97,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose deployment
 - Dark mode support
 
+[0.2.1]: https://github.com/legoushka/usefuldog-extra/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/legoushka/usefuldog-extra/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/legoushka/usefuldog-extra/releases/tag/v0.1.0
