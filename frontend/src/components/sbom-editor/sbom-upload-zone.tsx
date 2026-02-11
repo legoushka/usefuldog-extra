@@ -2,9 +2,12 @@
 
 import { useCallback, useState } from "react"
 import { Upload, FileCode2, Plus } from "lucide-react"
+import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 interface SbomUploadZoneProps {
   onFileLoaded: (bom: unknown, file: File) => void
@@ -48,6 +51,10 @@ export function SbomUploadZone({ onFileLoaded, isLoading }: SbomUploadZoneProps)
 
   const processFile = useCallback(
     (file: File) => {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("Файл слишком большой. Максимальный размер — 10 МБ.")
+        return
+      }
       setParseError(null)
       const reader = new FileReader()
       reader.onload = (e) => {

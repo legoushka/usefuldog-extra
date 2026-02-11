@@ -46,7 +46,10 @@ class ProjectStore:
 
     def _get_project_dir(self, project_id: str) -> Path:
         """Get path to project directory."""
-        return self.projects_dir / project_id
+        project_dir = (self.projects_dir / project_id).resolve()
+        if not str(project_dir).startswith(str(self.projects_dir.resolve())):
+            raise ValueError(f"Invalid project ID: {project_id}")
+        return project_dir
 
     def _get_sboms_dir(self, project_id: str) -> Path:
         """Get path to project's SBOMs directory."""

@@ -108,7 +108,8 @@ git worktree add ../usefuldog-extra-42 feature/42-vex-export
 
 ```bash
 cd frontend && npm run lint        # ESLint
-# npm test                         # когда появятся тесты
+cd frontend && npm test            # Vitest
+cd backends/python && uv run --with-requirements requirements.txt pytest -v
 ```
 
 #### 5. PR в development
@@ -124,15 +125,24 @@ Issue закроется автоматически при мерже PR.
 
 Когда все issues в milestone закрыты:
 
+1. **Обновить документацию перед тегом:**
+   - `CHANGELOG.md` — добавить секцию новой версии (Added / Changed / Fixed / Removed)
+   - `README.md` — обновить описание проекта, инструкции, список фич если изменились
+   - `CLAUDE.md` — обновить Backend API, Frontend Component Organization, архитектуру если менялась структура
+   - `.env.example` — добавить новые переменные окружения если появились
+
+2. **Создать тег и релиз:**
 ```bash
 git checkout development && git pull
 git checkout main && git merge development
-# обновить CHANGELOG.md (Added / Changed / Fixed / Removed)
+# обновить документацию (см. выше)
 git tag v0.2.0
 git push origin main --tags
 gh release create v0.2.0 --title "v0.2.0" --notes-from-tag
 gh api repos/{owner}/{repo}/milestones/{number} -X PATCH -f state=closed
 ```
+
+> **Важно:** Документация должна быть актуальной на момент создания тега. Не создавать тег без обновлённых CHANGELOG.md и README.md.
 
 ### Ветки
 

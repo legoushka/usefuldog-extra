@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
 import { Toaster } from "@/components/ui/sonner"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,7 +48,7 @@ export default function RootLayout({
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 h-4" />
                 </header>
-                <main className="flex-1 p-6">{children}</main>
+                <main className="flex-1 p-6"><ErrorBoundary>{children}</ErrorBoundary></main>
               </SidebarInset>
             </SidebarProvider>
           </TooltipProvider>

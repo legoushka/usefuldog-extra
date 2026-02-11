@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { HelpCircle, CheckCircle2, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -12,7 +12,9 @@ import { SbomUnifier } from "@/components/sbom-editor/sbom-unifier"
 import { SbomExplorerSidebar } from "@/components/sbom-editor/sbom-explorer-sidebar"
 import { SbomWelcomeScreen } from "@/components/sbom-editor/sbom-welcome-screen"
 import { SbomBreadcrumbs } from "@/components/sbom-editor/sbom-breadcrumbs"
-import { uploadSbom, updateSbom, getProject } from "@/lib/sbom-api"
+import { uploadSbom, getProject } from "@/lib/sbom-api"
+import { useSbomAutoSave } from "@/hooks/use-sbom-auto-save"
+import { useSbomProject } from "@/hooks/use-sbom-project"
 import type { CycloneDxBom, ValidateResponse } from "@/lib/sbom-types"
 import type { SbomMetadata } from "@/lib/project-types"
 
@@ -24,21 +26,28 @@ export default function SbomEditorPage() {
   const [activeTab, setActiveTab] = useState("edit")
   const [validationResults, setValidationResults] =
     useState<ValidateResponse | null>(null)
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null,
-  )
-  const [currentSbomId, setCurrentSbomId] = useState<string | null>(null)
-  const [currentSbomMetadata, setCurrentSbomMetadata] = useState<SbomMetadata | null>(null)
-  const [currentProjectName, setCurrentProjectName] = useState<string | null>(null)
-  const [explorerRefreshKey, setExplorerRefreshKey] = useState(0)
-  const [hasProjects, setHasProjects] = useState(false)
-  const [savedSboms, setSavedSboms] = useState<SbomMetadata[]>([])
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
-  const isSavingRef = useRef(false)
 
-  const refreshExplorer = useCallback(() => {
-    setExplorerRefreshKey((prev) => prev + 1)
-  }, [])
+  const project = useSbomProject()
+
+  const { autoSaveStatus, handleBomUpdate } = useSbomAutoSave({
+    selectedProjectId: project.selectedProjectId,
+    currentSbomId: project.currentSbomId,
+    onBomChange: setSbomData,
+  })
+
+  // Warn about unsaved changes when user has sbomData but no currentSbomId
+  useEffect(() => {
+    const hasUnsavedChanges = sbomData !== null && project.currentSbomId === null
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault()
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [sbomData, project.currentSbomId])
 
   const handleFileLoaded = useCallback(
     async (parsed: unknown, file: File, projectId?: string) => {
@@ -49,21 +58,21 @@ export default function SbomEditorPage() {
       setActiveTab("edit")
 
       // Use provided projectId or fall back to selectedProjectId
-      const targetProjectId = projectId || selectedProjectId
+      const targetProjectId = projectId || project.selectedProjectId
 
       // Auto-save to project
       if (targetProjectId) {
         try {
           const response = await uploadSbom(targetProjectId, file)
-          setCurrentSbomId(response.id)
-          setSelectedProjectId(targetProjectId)
-          refreshExplorer() // Refresh explorer to show new file
+          project.setCurrentSbomId(response.id)
+          project.setSelectedProjectId(targetProjectId)
+          project.refreshExplorer() // Refresh explorer to show new file
         } catch (err) {
           console.error("Failed to auto-save SBOM:", err)
         }
       }
     },
-    [selectedProjectId, refreshExplorer],
+    [project],
   )
 
   const handleFileLoadedFromExplorer = useCallback(
@@ -74,52 +83,13 @@ export default function SbomEditorPage() {
   )
 
   const handleProjectSelected = useCallback(async (projectId: string, projectName: string) => {
-    setSelectedProjectId(projectId)
-    setCurrentProjectName(projectName)
-
-    // Load SBOMs for this project
-    try {
-      const project = await getProject(projectId)
-      setSavedSboms(project.sboms)
-    } catch (err) {
-      console.error("Failed to load project SBOMs:", err)
-      setSavedSboms([])
-    }
-
-    // Clear SBOM selection when selecting a new project
-    if (selectedProjectId !== projectId) {
+    const prevProjectId = project.selectedProjectId
+    await project.handleProjectSelected(projectId, projectName)
+    if (prevProjectId !== projectId) {
       setSbomData(null)
-      setCurrentSbomId(null)
-      setCurrentSbomMetadata(null)
+      project.resetEditor()
     }
-  }, [selectedProjectId])
-
-  const handleBomUpdate = useCallback(async (updatedBom: CycloneDxBom) => {
-    setSbomData(updatedBom)
-
-    // Save immediately
-    if (selectedProjectId && currentSbomId && !isSavingRef.current) {
-      isSavingRef.current = true
-      setAutoSaveStatus("saving")
-
-      try {
-        await updateSbom(selectedProjectId, currentSbomId, {
-          document: updatedBom as unknown as Record<string, unknown>,
-        })
-        setAutoSaveStatus("saved")
-        // Reset "saved" status after 1.5 seconds
-        setTimeout(() => {
-          setAutoSaveStatus("idle")
-        }, 1500)
-      } catch (err) {
-        console.error("Failed to auto-save SBOM:", err)
-        setAutoSaveStatus("idle")
-        toast.error("Ошибка автосохранения: " + (err instanceof Error ? err.message : "Неизвестная ошибка"))
-      } finally {
-        isSavingRef.current = false
-      }
-    }
-  }, [selectedProjectId, currentSbomId])
+  }, [project])
 
   const handleUnified = useCallback((bom: CycloneDxBom) => {
     setSbomData(bom)
@@ -128,27 +98,26 @@ export default function SbomEditorPage() {
     setActiveTab("edit")
   }, [])
 
-
   const handleOpenSbomFromExplorer = useCallback(
     async (bom: CycloneDxBom, metadata: SbomMetadata, projectId: string) => {
       setSbomData(bom)
-      setCurrentSbomId(metadata.id)
-      setCurrentSbomMetadata(metadata)
-      setSelectedProjectId(projectId)
+      project.setCurrentSbomId(metadata.id)
+      project.setCurrentSbomMetadata(metadata)
+      project.setSelectedProjectId(projectId)
       setSelectedComponentPath(null)
       setValidationResults(null)
       setActiveTab("edit")
 
       // Fetch project name and SBOMs for breadcrumbs and import
       try {
-        const project = await getProject(projectId)
-        setCurrentProjectName(project.name)
-        setSavedSboms(project.sboms)
+        const projectData = await getProject(projectId)
+        project.setCurrentProjectName(projectData.name)
+        project.setSavedSboms(projectData.sboms)
       } catch (err) {
         console.error("Failed to fetch project info:", err)
       }
     },
-    [],
+    [project],
   )
 
   const handleCreateEmptyFromExplorer = useCallback(
@@ -194,34 +163,34 @@ export default function SbomEditorPage() {
         )
         const response = await uploadSbom(projectId, file)
         setSbomData(emptyBom)
-        setCurrentSbomId(response.id)
-        setCurrentSbomMetadata({
+        project.setCurrentSbomId(response.id)
+        project.setCurrentSbomMetadata({
           id: response.id,
           name: response.name,
           version: response.version,
           uploaded_at: response.uploaded_at,
         })
-        setSelectedProjectId(projectId)
+        project.setSelectedProjectId(projectId)
         setSelectedComponentPath(null)
         setValidationResults(null)
         setActiveTab("edit")
 
         // Fetch project name for breadcrumbs
         try {
-          const project = await getProject(projectId)
-          setCurrentProjectName(project.name)
+          const projectData = await getProject(projectId)
+          project.setCurrentProjectName(projectData.name)
         } catch (err) {
           console.error("Failed to fetch project name:", err)
         }
 
-        refreshExplorer() // Refresh explorer to show new file
+        project.refreshExplorer() // Refresh explorer to show new file
         toast.success("Пустой SBOM создан")
       } catch (err) {
         console.error("Failed to create empty SBOM:", err)
         toast.error("Ошибка создания SBOM: " + (err instanceof Error ? err.message : "Неизвестная ошибка"))
       }
     },
-    [refreshExplorer],
+    [project],
   )
 
   const editContent = sbomData ? (
@@ -232,9 +201,9 @@ export default function SbomEditorPage() {
       onChange={handleBomUpdate}
       validationResults={validationResults}
       onValidationResults={setValidationResults}
-      projectId={selectedProjectId}
-      savedSboms={savedSboms}
-      currentSbomId={currentSbomId ?? undefined}
+      projectId={project.selectedProjectId}
+      savedSboms={project.savedSboms}
+      currentSbomId={project.currentSbomId ?? undefined}
     />
   ) : (
     <p className="text-sm text-muted-foreground text-center py-8">
@@ -245,8 +214,8 @@ export default function SbomEditorPage() {
   const unifyContent = (
     <SbomUnifier
       onUnified={handleUnified}
-      projectId={selectedProjectId}
-      savedSboms={savedSboms}
+      projectId={project.selectedProjectId}
+      savedSboms={project.savedSboms}
     />
   )
 
@@ -257,11 +226,11 @@ export default function SbomEditorPage() {
         onOpenSbom={handleOpenSbomFromExplorer}
         onCreateEmpty={handleCreateEmptyFromExplorer}
         onFileLoaded={handleFileLoadedFromExplorer}
-        onProjectsLoaded={setHasProjects}
+        onProjectsLoaded={project.setHasProjects}
         onProjectSelected={handleProjectSelected}
-        selectedProjectId={selectedProjectId}
-        selectedSbomId={currentSbomId}
-        refreshTrigger={explorerRefreshKey}
+        selectedProjectId={project.selectedProjectId}
+        selectedSbomId={project.currentSbomId}
+        refreshTrigger={project.explorerRefreshKey}
       />
 
       {/* Main content area */}
@@ -287,9 +256,9 @@ export default function SbomEditorPage() {
             </div>
 
             <SbomBreadcrumbs
-              projectName={currentProjectName}
-              sbomName={currentSbomMetadata?.name}
-              sbomVersion={currentSbomMetadata?.version}
+              projectName={project.currentProjectName}
+              sbomName={project.currentSbomMetadata?.name}
+              sbomVersion={project.currentSbomMetadata?.version}
             />
 
             {!sbomData && (
@@ -318,13 +287,13 @@ export default function SbomEditorPage() {
           <SbomWelcomeScreen
             onCreateNew={() => {
               // Will create new SBOM - needs a project first
-              if (!selectedProjectId) {
+              if (!project.selectedProjectId) {
                 toast.error("Сначала создайте или выберите проект в боковой панели")
                 return
               }
-              handleCreateEmptyFromExplorer(selectedProjectId)
+              handleCreateEmptyFromExplorer(project.selectedProjectId)
             }}
-            hasProjects={hasProjects}
+            hasProjects={project.hasProjects}
           />
         )}
       </div>

@@ -1,11 +1,15 @@
 """FastAPI application for VEX-to-Confluence conversion and SBOM tools."""
 
 import json
+import os
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, Path, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from converters.vex_to_confluence import convert_vex_to_confluence
 from converters.sbom_validator import validate_sbom
@@ -29,18 +33,42 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# ── Body size limit middleware ─────────────────────────────────────────────
+
+MAX_BODY_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+class LimitBodySizeMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > MAX_BODY_SIZE:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request body too large. Maximum size is 10 MB."},
+            )
+        return await call_next(request)
+
+
+app.add_middleware(LimitBodySizeMiddleware)
+
+# ── CORS middleware ────────────────────────────────────────────────────────
+
+cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Initialize project store (uses /data by default, set DATA_DIR env var to override)
-import os
 data_dir = os.environ.get("DATA_DIR", "/data")
 project_store = ProjectStore(data_dir=data_dir)
+
+# UUID regex pattern for path parameter validation
+_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
 
 @app.get("/health")
@@ -147,7 +175,9 @@ async def create_project(request: CreateProjectRequest) -> ProjectMetadata:
 
 
 @app.get("/api/projects/{project_id}", response_model=ProjectDetail)
-async def get_project(project_id: str) -> ProjectDetail:
+async def get_project(
+    project_id: str = Path(pattern=_UUID_PATTERN),
+) -> ProjectDetail:
     """Get project details with SBOM list."""
     try:
         project = project_store.get_project(project_id)
@@ -161,7 +191,9 @@ async def get_project(project_id: str) -> ProjectDetail:
 
 
 @app.delete("/api/projects/{project_id}", status_code=204)
-async def delete_project(project_id: str) -> None:
+async def delete_project(
+    project_id: str = Path(pattern=_UUID_PATTERN),
+) -> None:
     """Delete a project and all its SBOMs."""
     try:
         deleted = project_store.delete_project(project_id)
@@ -176,7 +208,10 @@ async def delete_project(project_id: str) -> None:
 @app.post(
     "/api/projects/{project_id}/sboms", response_model=SaveSbomResponse, status_code=201
 )
-async def upload_sbom(project_id: str, file: UploadFile) -> SaveSbomResponse:
+async def upload_sbom(
+    file: UploadFile,
+    project_id: str = Path(pattern=_UUID_PATTERN),
+) -> SaveSbomResponse:
     """Upload a new SBOM to a project (multipart file)."""
     try:
         # Verify project exists
@@ -204,7 +239,10 @@ async def upload_sbom(project_id: str, file: UploadFile) -> SaveSbomResponse:
 
 
 @app.get("/api/projects/{project_id}/sboms/{sbom_id}")
-async def get_sbom(project_id: str, sbom_id: str) -> dict[str, Any]:
+async def get_sbom(
+    project_id: str = Path(pattern=_UUID_PATTERN),
+    sbom_id: str = Path(pattern=_UUID_PATTERN),
+) -> dict[str, Any]:
     """Get SBOM content."""
     try:
         sbom = project_store.get_sbom(project_id, sbom_id)
@@ -219,7 +257,9 @@ async def get_sbom(project_id: str, sbom_id: str) -> dict[str, Any]:
 
 @app.put("/api/projects/{project_id}/sboms/{sbom_id}", response_model=SaveSbomResponse)
 async def update_sbom(
-    project_id: str, sbom_id: str, request: SaveSbomRequest
+    request: SaveSbomRequest,
+    project_id: str = Path(pattern=_UUID_PATTERN),
+    sbom_id: str = Path(pattern=_UUID_PATTERN),
 ) -> SaveSbomResponse:
     """Update an existing SBOM."""
     try:
@@ -247,7 +287,10 @@ async def update_sbom(
 
 
 @app.delete("/api/projects/{project_id}/sboms/{sbom_id}", status_code=204)
-async def delete_sbom(project_id: str, sbom_id: str) -> None:
+async def delete_sbom(
+    project_id: str = Path(pattern=_UUID_PATTERN),
+    sbom_id: str = Path(pattern=_UUID_PATTERN),
+) -> None:
     """Delete an SBOM."""
     try:
         deleted = project_store.delete_sbom(project_id, sbom_id)

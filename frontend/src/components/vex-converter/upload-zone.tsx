@@ -2,8 +2,11 @@
 
 import { useCallback, useState } from "react"
 import { Upload, FileJson } from "lucide-react"
+import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 interface UploadZoneProps {
   onFileSelect: (file: File) => void
@@ -19,6 +22,10 @@ export function UploadZone({ onFileSelect, isLoading }: UploadZoneProps) {
       setIsDragOver(false)
       const file = e.dataTransfer.files[0]
       if (file && file.name.endsWith(".json")) {
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error("Файл слишком большой. Максимальный размер — 10 МБ.")
+          return
+        }
         onFileSelect(file)
       }
     },
@@ -29,6 +36,10 @@ export function UploadZone({ onFileSelect, isLoading }: UploadZoneProps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error("Файл слишком большой. Максимальный размер — 10 МБ.")
+          return
+        }
         onFileSelect(file)
       }
     },

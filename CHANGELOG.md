@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-02-11
+
+### Added
+- UUID validation on all project/SBOM route parameters (path traversal protection)
+- Path resolve + prefix check in `ProjectStore._get_project_dir`
+- 10 MB request body size limit middleware (backend)
+- 10 MB client-side file size checks in upload zones with toast errors
+- CORS origins configurable via `CORS_ORIGINS` env var
+- React Error Boundary with Russian error message and reload button
+- `beforeunload` warning for unsaved SBOM changes
+- Frontend test suite: Vitest + Testing Library (45 tests)
+- Backend test suite: API endpoints + ProjectStore (68 new tests, 96 total)
+- `.env.example` with documented environment variables
+- Docker Compose healthcheck for python-backend
+
+### Changed
+- SBOM editor page refactored: extracted `useSbomAutoSave` and `useSbomProject` hooks
+- Backend Dockerfile switched from `pip` to `uv`
+- `depends_on` in Docker Compose uses `condition: service_healthy`
+- `import os` moved to top of `main.py`
+
 ## [0.2.1] - 2026-02-11
 
 ### Added
@@ -97,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose deployment
 - Dark mode support
 
+[0.2.2]: https://github.com/legoushka/usefuldog-extra/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/legoushka/usefuldog-extra/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/legoushka/usefuldog-extra/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/legoushka/usefuldog-extra/releases/tag/v0.1.0
