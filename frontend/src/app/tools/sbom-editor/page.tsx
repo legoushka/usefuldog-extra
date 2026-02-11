@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
-import { HelpCircle, Save, CheckCircle2, Loader2 } from "lucide-react"
+import { useState, useCallback, useRef } from "react"
+import { HelpCircle, CheckCircle2, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,6 @@ export default function SbomEditorPage() {
     number[] | null
   >(null)
   const [activeTab, setActiveTab] = useState("view")
-  const [isDirty, setIsDirty] = useState(false)
   const [validationResults, setValidationResults] =
     useState<ValidateResponse | null>(null)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
@@ -37,12 +36,11 @@ export default function SbomEditorPage() {
   const [currentSbomId, setCurrentSbomId] = useState<string | null>(null)
   const [currentSbomMetadata, setCurrentSbomMetadata] = useState<SbomMetadata | null>(null)
   const [currentProjectName, setCurrentProjectName] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
   const [explorerRefreshKey, setExplorerRefreshKey] = useState(0)
   const [hasProjects, setHasProjects] = useState(false)
   const [savedSboms, setSavedSboms] = useState<SbomMetadata[]>([])
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isSavingRef = useRef(false)
 
   const refreshExplorer = useCallback(() => {
     setExplorerRefreshKey((prev) => prev + 1)
@@ -54,7 +52,6 @@ export default function SbomEditorPage() {
       setSbomData(bom)
       setSelectedComponentPath(null)
       setValidationResults(null)
-      setIsDirty(false)
       setActiveTab("view")
 
       // Use provided projectId or fall back to selectedProjectId
@@ -103,76 +100,40 @@ export default function SbomEditorPage() {
     }
   }, [selectedProjectId])
 
-  const handleBomUpdate = useCallback((updatedBom: CycloneDxBom) => {
+  const handleBomUpdate = useCallback(async (updatedBom: CycloneDxBom) => {
     setSbomData(updatedBom)
-    setIsDirty(true)
-    setAutoSaveStatus("idle") // Reset status when user makes changes
-  }, [])
+
+    // Save immediately
+    if (selectedProjectId && currentSbomId && !isSavingRef.current) {
+      isSavingRef.current = true
+      setAutoSaveStatus("saving")
+
+      try {
+        await updateSbom(selectedProjectId, currentSbomId, {
+          document: updatedBom as unknown as Record<string, unknown>,
+        })
+        setAutoSaveStatus("saved")
+        // Reset "saved" status after 1.5 seconds
+        setTimeout(() => {
+          setAutoSaveStatus("idle")
+        }, 1500)
+      } catch (err) {
+        console.error("Failed to auto-save SBOM:", err)
+        setAutoSaveStatus("idle")
+        toast.error("Ошибка автосохранения: " + (err instanceof Error ? err.message : "Неизвестная ошибка"))
+      } finally {
+        isSavingRef.current = false
+      }
+    }
+  }, [selectedProjectId, currentSbomId])
 
   const handleUnified = useCallback((bom: CycloneDxBom) => {
     setSbomData(bom)
     setSelectedComponentPath(null)
     setValidationResults(null)
-    setIsDirty(false)
     setActiveTab("view")
   }, [])
 
-  const handleSave = useCallback(async (showToast = true) => {
-    if (!selectedProjectId || !currentSbomId || !sbomData) return
-
-    try {
-      setSaving(true)
-      setAutoSaveStatus("saving")
-      await updateSbom(selectedProjectId, currentSbomId, {
-        document: sbomData as unknown as Record<string, unknown>,
-      })
-      setIsDirty(false)
-      setAutoSaveStatus("saved")
-      if (showToast) {
-        toast.success("SBOM успешно сохранён")
-      }
-      // Reset "saved" status after 2 seconds
-      setTimeout(() => {
-        setAutoSaveStatus("idle")
-      }, 2000)
-    } catch (err) {
-      console.error("Failed to save SBOM:", err)
-      setAutoSaveStatus("idle")
-      if (showToast) {
-        toast.error("Ошибка сохранения: " + (err instanceof Error ? err.message : "Неизвестная ошибка"))
-      }
-    } finally {
-      setSaving(false)
-    }
-  }, [selectedProjectId, currentSbomId, sbomData])
-
-  // Auto-save with debounce
-  useEffect(() => {
-    // Clear existing timeout
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current)
-    }
-
-    // Don't auto-save if:
-    // - No SBOM loaded
-    // - No project/sbom ID
-    // - Not dirty
-    if (!sbomData || !selectedProjectId || !currentSbomId || !isDirty) {
-      return
-    }
-
-    // Set new timeout for auto-save (2 seconds after last change)
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      handleSave(false) // Don't show toast for auto-save
-    }, 2000)
-
-    // Cleanup
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current)
-      }
-    }
-  }, [sbomData, selectedProjectId, currentSbomId, isDirty, handleSave])
 
   const handleOpenSbomFromExplorer = useCallback(
     async (bom: CycloneDxBom, metadata: SbomMetadata, projectId: string) => {
@@ -182,7 +143,6 @@ export default function SbomEditorPage() {
       setSelectedProjectId(projectId)
       setSelectedComponentPath(null)
       setValidationResults(null)
-      setIsDirty(false)
       setActiveTab("view")
 
       // Fetch project name and SBOMs for breadcrumbs and import
@@ -250,7 +210,6 @@ export default function SbomEditorPage() {
         setSelectedProjectId(projectId)
         setSelectedComponentPath(null)
         setValidationResults(null)
-        setIsDirty(false)
         setActiveTab("view")
 
         // Fetch project name for breadcrumbs
@@ -368,22 +327,6 @@ export default function SbomEditorPage() {
                   <CheckCircle2 className="h-3 w-3" />
                   Сохранено
                 </Badge>
-              )}
-              {isDirty && autoSaveStatus === "idle" && (
-                <Badge variant="secondary" className="text-xs">
-                  Изменён
-                </Badge>
-              )}
-              {currentSbomId && (
-                <Button
-                  size="sm"
-                  onClick={() => handleSave(true)}
-                  disabled={saving || !isDirty}
-                  variant="outline"
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  Сохранить
-                </Button>
               )}
             </div>
 
