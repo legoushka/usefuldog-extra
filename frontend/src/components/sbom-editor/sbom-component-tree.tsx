@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Search, Plus, AlertTriangle } from "lucide-react"
-import { ComponentNode, type ComponentIssueCount } from "./sbom-component-node"
+import { ComponentNode, type ComponentIssueData } from "./sbom-component-node"
 import type { CdxComponent, ValidateResponse } from "@/lib/sbom-types"
 
 type ValidationFilter = "all" | "errors" | "warnings"
@@ -28,33 +28,34 @@ interface ComponentTreeProps {
   validationResults?: ValidateResponse | null
 }
 
+function extractComponentPath(issuePath: string): string | null {
+  const regex = /components\[(\d+)\]/g
+  const indices: number[] = []
+  let match
+  while ((match = regex.exec(issuePath)) !== null) {
+    indices.push(parseInt(match[1], 10))
+  }
+  return indices.length > 0 ? indices.join("-") : null
+}
+
 function buildIssueMap(
-  components: CdxComponent[],
   validationResults: ValidateResponse | null,
-): Map<string, ComponentIssueCount> {
-  const map = new Map<string, ComponentIssueCount>()
+): Map<string, ComponentIssueData> {
+  const map = new Map<string, ComponentIssueData>()
   if (!validationResults) return map
 
-  const countIssues = (comp: CdxComponent) => {
-    const bomRef = comp["bom-ref"]
-    if (!bomRef) return
+  for (const issue of validationResults.issues) {
+    if (!issue.path) continue
+    const pathKey = extractComponentPath(issue.path)
+    if (!pathKey) continue
 
-    const errors = validationResults.issues.filter(
-      (issue) => issue.level === "error" && issue.path?.includes(bomRef),
-    ).length
-
-    const warnings = validationResults.issues.filter(
-      (issue) => issue.level === "warning" && issue.path?.includes(bomRef),
-    ).length
-
-    if (errors > 0 || warnings > 0) {
-      map.set(bomRef, { errors, warnings })
-    }
-
-    comp.components?.forEach(countIssues)
+    const existing = map.get(pathKey) || { errors: 0, warnings: 0, issues: [] }
+    if (issue.level === "error") existing.errors++
+    else existing.warnings++
+    existing.issues.push(issue)
+    map.set(pathKey, existing)
   }
 
-  components.forEach(countIssues)
   return map
 }
 
@@ -88,8 +89,8 @@ export function ComponentTree({
   } | null>(null)
 
   const issueMap = useMemo(
-    () => buildIssueMap(components, validationResults ?? null),
-    [components, validationResults],
+    () => buildIssueMap(validationResults ?? null),
+    [validationResults],
   )
 
   const totalErrors = useMemo(
@@ -144,7 +145,7 @@ export function ComponentTree({
   }, [])
 
   const matchesFilter = useCallback(
-    (comp: CdxComponent): boolean => {
+    (comp: CdxComponent, pathKey: string): boolean => {
       // Text filter
       if (filter) {
         const lower = filter.toLowerCase()
@@ -170,13 +171,11 @@ export function ComponentTree({
 
       // Validation filter
       if (validationFilter !== "all") {
-        const bomRef = comp["bom-ref"]
-        if (!bomRef) return false
-        const issues = issueMap.get(bomRef)
-        if (!issues) return false
+        const data = issueMap.get(pathKey)
+        if (!data) return false
 
-        if (validationFilter === "errors" && issues.errors === 0) return false
-        if (validationFilter === "warnings" && issues.warnings === 0)
+        if (validationFilter === "errors" && data.errors === 0) return false
+        if (validationFilter === "warnings" && data.warnings === 0)
           return false
       }
 
@@ -191,13 +190,12 @@ export function ComponentTree({
     depth: number,
   ) => {
     return comps.map((comp, idx) => {
-      if (!matchesFilter(comp)) return null
       const path = [...basePath, idx]
       const pathKey = path.join("-")
+      if (!matchesFilter(comp, pathKey)) return null
       const hasChildren = !!comp.components && comp.components.length > 0
       const isExpanded = expandedPaths.has(pathKey)
-      const bomRef = comp["bom-ref"]
-      const issueCount = bomRef ? issueMap.get(bomRef) : undefined
+      const issueData = issueMap.get(pathKey)
 
       return (
         <div key={pathKey}>
@@ -215,7 +213,7 @@ export function ComponentTree({
             hasChildren={hasChildren}
             onToggle={() => toggleExpand(pathKey)}
             depth={depth}
-            issueCount={issueCount}
+            issueData={issueData}
           />
           {hasChildren && isExpanded && (
             <div>

@@ -7,15 +7,9 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { SbomTabs } from "@/components/sbom-editor/sbom-tabs"
-import { SbomMetadata as SbomMetadataPanel } from "@/components/sbom-editor/sbom-metadata"
-import { SbomStatsCards } from "@/components/sbom-editor/sbom-stats-cards"
-import { ComponentTree } from "@/components/sbom-editor/sbom-component-tree"
-import { SbomDependencies } from "@/components/sbom-editor/sbom-dependencies"
-import { SbomLicensesSummary } from "@/components/sbom-editor/sbom-licenses-summary"
 import { SbomEditorPanel } from "@/components/sbom-editor/sbom-editor-panel"
-import { SbomValidationPanel } from "@/components/sbom-editor/sbom-validation-panel"
 import { SbomUnifier } from "@/components/sbom-editor/sbom-unifier"
-import { SbomFileExplorer } from "@/components/sbom-editor/sbom-file-explorer"
+import { SbomExplorerSidebar } from "@/components/sbom-editor/sbom-explorer-sidebar"
 import { SbomWelcomeScreen } from "@/components/sbom-editor/sbom-welcome-screen"
 import { SbomBreadcrumbs } from "@/components/sbom-editor/sbom-breadcrumbs"
 import { uploadSbom, updateSbom, getProject } from "@/lib/sbom-api"
@@ -27,7 +21,7 @@ export default function SbomEditorPage() {
   const [selectedComponentPath, setSelectedComponentPath] = useState<
     number[] | null
   >(null)
-  const [activeTab, setActiveTab] = useState("view")
+  const [activeTab, setActiveTab] = useState("edit")
   const [validationResults, setValidationResults] =
     useState<ValidateResponse | null>(null)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
@@ -52,7 +46,7 @@ export default function SbomEditorPage() {
       setSbomData(bom)
       setSelectedComponentPath(null)
       setValidationResults(null)
-      setActiveTab("view")
+      setActiveTab("edit")
 
       // Use provided projectId or fall back to selectedProjectId
       const targetProjectId = projectId || selectedProjectId
@@ -131,7 +125,7 @@ export default function SbomEditorPage() {
     setSbomData(bom)
     setSelectedComponentPath(null)
     setValidationResults(null)
-    setActiveTab("view")
+    setActiveTab("edit")
   }, [])
 
 
@@ -143,7 +137,7 @@ export default function SbomEditorPage() {
       setSelectedProjectId(projectId)
       setSelectedComponentPath(null)
       setValidationResults(null)
-      setActiveTab("view")
+      setActiveTab("edit")
 
       // Fetch project name and SBOMs for breadcrumbs and import
       try {
@@ -210,7 +204,7 @@ export default function SbomEditorPage() {
         setSelectedProjectId(projectId)
         setSelectedComponentPath(null)
         setValidationResults(null)
-        setActiveTab("view")
+        setActiveTab("edit")
 
         // Fetch project name for breadcrumbs
         try {
@@ -230,37 +224,6 @@ export default function SbomEditorPage() {
     [refreshExplorer],
   )
 
-  const viewContent = sbomData ? (
-    <>
-      <SbomMetadataPanel
-        metadata={sbomData.metadata}
-        specVersion={sbomData.specVersion}
-        bomFormat={sbomData.bomFormat}
-        serialNumber={sbomData.serialNumber}
-      />
-      <SbomStatsCards
-        components={sbomData.components || []}
-        dependencies={sbomData.dependencies}
-      />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ComponentTree
-          components={sbomData.components || []}
-          selectedPath={selectedComponentPath}
-          onSelectPath={setSelectedComponentPath}
-          onAddComponent={() => {}}
-        />
-        <div className="space-y-4">
-          <SbomLicensesSummary components={sbomData.components || []} />
-          <SbomDependencies dependencies={sbomData.dependencies || []} />
-        </div>
-      </div>
-    </>
-  ) : (
-    <p className="text-sm text-muted-foreground text-center py-8">
-      Загрузите SBOM файл для просмотра
-    </p>
-  )
-
   const editContent = sbomData ? (
     <SbomEditorPanel
       bom={sbomData}
@@ -268,6 +231,7 @@ export default function SbomEditorPage() {
       onSelectPath={setSelectedComponentPath}
       onChange={handleBomUpdate}
       validationResults={validationResults}
+      onValidationResults={setValidationResults}
       projectId={selectedProjectId}
       savedSboms={savedSboms}
       currentSbomId={currentSbomId ?? undefined}
@@ -278,38 +242,30 @@ export default function SbomEditorPage() {
     </p>
   )
 
-  const unifyContent = <SbomUnifier onUnified={handleUnified} />
-
-  const validateContent = sbomData ? (
-    <SbomValidationPanel
-      bom={sbomData}
-      validationResults={validationResults}
-      onValidationResults={setValidationResults}
+  const unifyContent = (
+    <SbomUnifier
+      onUnified={handleUnified}
+      projectId={selectedProjectId}
+      savedSboms={savedSboms}
     />
-  ) : (
-    <p className="text-sm text-muted-foreground text-center py-8">
-      Загрузите SBOM файл для валидации
-    </p>
   )
 
   return (
-    <div className="grid lg:grid-cols-[280px_1fr] gap-4 h-full">
+    <div className="flex gap-4 h-full">
       {/* Left sidebar - File Explorer */}
-      <div className="hidden lg:block">
-        <SbomFileExplorer
-          onOpenSbom={handleOpenSbomFromExplorer}
-          onCreateEmpty={handleCreateEmptyFromExplorer}
-          onFileLoaded={handleFileLoadedFromExplorer}
-          onProjectsLoaded={setHasProjects}
-          onProjectSelected={handleProjectSelected}
-          selectedProjectId={selectedProjectId}
-          selectedSbomId={currentSbomId}
-          refreshTrigger={explorerRefreshKey}
-        />
-      </div>
+      <SbomExplorerSidebar
+        onOpenSbom={handleOpenSbomFromExplorer}
+        onCreateEmpty={handleCreateEmptyFromExplorer}
+        onFileLoaded={handleFileLoadedFromExplorer}
+        onProjectsLoaded={setHasProjects}
+        onProjectSelected={handleProjectSelected}
+        selectedProjectId={selectedProjectId}
+        selectedSbomId={currentSbomId}
+        refreshTrigger={explorerRefreshKey}
+      />
 
       {/* Main content area */}
-      <div className="space-y-6 min-w-0">
+      <div className="flex-1 space-y-6 min-w-0">
         <div className="flex items-start justify-between">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -354,10 +310,8 @@ export default function SbomEditorPage() {
           <SbomTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            viewContent={viewContent}
             editContent={editContent}
             unifyContent={unifyContent}
-            validateContent={validateContent}
             hasBom={!!sbomData}
           />
         ) : (

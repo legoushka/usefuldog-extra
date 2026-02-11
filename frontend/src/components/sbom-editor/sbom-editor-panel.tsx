@@ -14,6 +14,7 @@ interface EditorPanelProps {
   onSelectPath: (path: number[]) => void
   onChange: (updated: CycloneDxBom) => void
   validationResults?: ValidateResponse | null
+  onValidationResults?: (results: ValidateResponse) => void
   projectId?: string | null
   savedSboms?: SbomMetadata[]
   currentSbomId?: string
@@ -25,6 +26,7 @@ export function SbomEditorPanel({
   onSelectPath,
   onChange,
   validationResults,
+  onValidationResults,
   projectId,
   savedSboms,
   currentSbomId,
@@ -97,6 +99,7 @@ export function SbomEditorPanel({
           onSelectPath={onSelectPath}
           onChange={onChange}
           validationResults={validationResults}
+          onValidationResults={onValidationResults}
           projectId={projectId}
           savedSboms={savedSboms}
           currentSbomId={currentSbomId}

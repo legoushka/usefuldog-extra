@@ -111,7 +111,7 @@ export function SbomImportDialog({
           className="h-8"
         >
           <Download className="h-4 w-4 mr-1" />
-          Импортировать SBOM
+          Добавить SBOM как компонент
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">

@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { GostFields } from "./sbom-gost-fields"
-import type { CdxComponent } from "@/lib/sbom-types"
+import type { CdxComponent, CdxExternalReference } from "@/lib/sbom-types"
 
 interface ComponentFormProps {
   component: CdxComponent
@@ -176,6 +176,33 @@ export function ComponentForm({
                 value={localComponent.cpe || ""}
                 onChange={(e) => update({ cpe: e.target.value || undefined })}
                 placeholder="cpe:2.3:a:vendor:product:version"
+                className="h-8 font-mono text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">VCS (ссылка на репозиторий)</Label>
+              <Input
+                value={
+                  localComponent.externalReferences?.find(
+                    (r) => r.type === "vcs",
+                  )?.url || ""
+                }
+                onChange={(e) => {
+                  const url = e.target.value
+                  const refs: CdxExternalReference[] = [
+                    ...(localComponent.externalReferences || []).filter(
+                      (r) => r.type !== "vcs",
+                    ),
+                  ]
+                  if (url) {
+                    refs.push({ type: "vcs", url })
+                  }
+                  update({
+                    externalReferences: refs.length > 0 ? refs : undefined,
+                  })
+                }}
+                placeholder="https://github.com/org/repo"
                 className="h-8 font-mono text-xs"
               />
             </div>

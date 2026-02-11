@@ -38,13 +38,17 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="flex flex-row items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
-          <Wrench className="h-5 w-5" />
-          <span className="font-semibold text-sm">UsefulDog Extra</span>
+          <Wrench className="h-5 w-5 shrink-0" />
+          <span className="font-semibold text-sm group-data-[collapsible=icon]:hidden">
+            UsefulDog Extra
+          </span>
         </div>
-        <ThemeToggle />
+        <div className="group-data-[collapsible=icon]:hidden">
+          <ThemeToggle />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -53,7 +57,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={item.url === "/" ? pathname === "/" : pathname.startsWith(item.url)}>
+                  <SidebarMenuButton asChild isActive={item.url === "/" ? pathname === "/" : pathname.startsWith(item.url)} tooltip={item.title}>
                     <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>

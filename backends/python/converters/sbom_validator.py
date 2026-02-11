@@ -224,11 +224,27 @@ def _validate_gost_fields(
                         path=path,
                     )
                 )
+            elif as_val == "":
+                issues.append(
+                    ValidationIssue(
+                        level="warning",
+                        message=f'GOST:attack_surface не заполнен у компонента "{comp.get("name", "?")}"',
+                        path=path,
+                    )
+                )
             if sf_val is None:
                 issues.append(
                     ValidationIssue(
                         level="warning",
                         message=f'Отсутствует GOST:security_function у компонента "{comp.get("name", "?")}"',
+                        path=path,
+                    )
+                )
+            elif sf_val == "":
+                issues.append(
+                    ValidationIssue(
+                        level="warning",
+                        message=f'GOST:security_function не заполнен у компонента "{comp.get("name", "?")}"',
                         path=path,
                     )
                 )

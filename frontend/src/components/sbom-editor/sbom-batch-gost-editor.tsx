@@ -166,7 +166,16 @@ export function BatchGostEditor({ components, onChange }: BatchGostEditorProps) 
     setSecurityFunction("unchanged")
   }
 
+  const handleSelectAll = () => {
+    setSelectedPaths(new Set(flatList.map((item) => item.path.join("-"))))
+  }
+
+  const handleDeselectAll = () => {
+    setSelectedPaths(new Set())
+  }
+
   const selectedCount = selectedPaths.size
+  const allSelected = selectedCount === flatList.length && flatList.length > 0
   const canApply = selectedCount > 0
 
   return (
@@ -174,7 +183,7 @@ export function BatchGostEditor({ components, onChange }: BatchGostEditorProps) 
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Package className="h-4 w-4 mr-2" />
-          Пакетное редактирование GOST
+          Настройка GOST-полей
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
@@ -188,9 +197,31 @@ export function BatchGostEditor({ components, onChange }: BatchGostEditorProps) 
 
         <div className="space-y-4">
           <div>
-            <Label className="text-sm font-medium">
-              Компоненты ({selectedCount} выбрано)
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">
+                Компоненты ({selectedCount} выбрано)
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleSelectAll}
+                  disabled={allSelected}
+                >
+                  Выбрать все
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleDeselectAll}
+                  disabled={selectedCount === 0}
+                >
+                  Снять выбор
+                </Button>
+              </div>
+            </div>
             <ScrollArea className="h-[300px] border rounded-md mt-2">
               <div className="p-4 space-y-3">
                 {flatList.map((item) => {

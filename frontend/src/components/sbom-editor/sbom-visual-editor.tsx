@@ -1,14 +1,30 @@
 "use client"
 
 import { useCallback, useState } from "react"
+import { toast } from "sonner"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  ShieldCheck,
+  AlertCircle,
+  CheckCircle2,
+  ListPlus,
+} from "lucide-react"
 import { ComponentTree } from "./sbom-component-tree"
 import { ComponentForm } from "./sbom-component-form"
 import { MetadataForm } from "./sbom-metadata-form"
 import { BatchGostEditor } from "./sbom-batch-gost-editor"
-import { SbomImportDialog } from "./sbom-import-dialog"
+import { AddComponentDialog } from "./sbom-add-component-dialog"
+import { ValidationIssueRow } from "./sbom-validation-issue"
 import { getComponentByPath } from "@/lib/sbom-utils"
+import { validateSbomJson, SbomApiError } from "@/lib/sbom-api"
 import type { CycloneDxBom, CdxComponent, ValidateResponse } from "@/lib/sbom-types"
 import type { SbomMetadata } from "@/lib/project-types"
+
+const GOST_PREFIX = "cdx:gost:"
 
 interface VisualEditorProps {
   bom: CycloneDxBom
@@ -16,6 +32,7 @@ interface VisualEditorProps {
   onSelectPath: (path: number[]) => void
   onChange: (updated: CycloneDxBom) => void
   validationResults?: ValidateResponse | null
+  onValidationResults?: (results: ValidateResponse) => void
   projectId?: string | null
   savedSboms?: SbomMetadata[]
   currentSbomId?: string
@@ -94,22 +111,77 @@ function generateUniqueBomRef(components: CdxComponent[], prefix = "component"):
   return bomRef
 }
 
+function addGostFieldsToComponent(component: CdxComponent): CdxComponent {
+  const properties = [...(component.properties || [])]
+  const hasAS = properties.some((p) => p.name === `${GOST_PREFIX}attack_surface`)
+  const hasSF = properties.some((p) => p.name === `${GOST_PREFIX}security_function`)
+
+  if (!hasAS) {
+    properties.push({ name: `${GOST_PREFIX}attack_surface`, value: "" })
+  }
+  if (!hasSF) {
+    properties.push({ name: `${GOST_PREFIX}security_function`, value: "" })
+  }
+
+  const children = component.components?.map(addGostFieldsToComponent)
+
+  return {
+    ...component,
+    properties,
+    ...(children && { components: children }),
+  }
+}
+
+function countComponentsMissingGost(components: CdxComponent[]): number {
+  let count = 0
+  for (const comp of components) {
+    const props = comp.properties || []
+    const hasAS = props.some((p) => p.name === `${GOST_PREFIX}attack_surface`)
+    const hasSF = props.some((p) => p.name === `${GOST_PREFIX}security_function`)
+    if (!hasAS || !hasSF) count++
+    if (comp.components) count += countComponentsMissingGost(comp.components)
+  }
+  return count
+}
+
 export function SbomVisualEditor({
   bom,
   selectedPath,
   onSelectPath,
   onChange,
   validationResults,
+  onValidationResults,
   projectId,
   savedSboms = [],
   currentSbomId,
 }: VisualEditorProps) {
-  const [isAddingComponent, setIsAddingComponent] = useState(false)
-  const [newComponentParentPath, setNewComponentParentPath] = useState<number[] | null>(null)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [isValidating, setIsValidating] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   const selectedComponent = selectedPath
     ? getComponentByPath(bom.components, selectedPath)
     : null
+
+  const errors = validationResults?.issues.filter((i) => i.level === "error") || []
+  const warnings = validationResults?.issues.filter((i) => i.level === "warning") || []
+
+  const handleValidate = useCallback(async () => {
+    setIsValidating(true)
+    setValidationError(null)
+    try {
+      const result = await validateSbomJson(bom)
+      onValidationResults?.(result)
+    } catch (err) {
+      if (err instanceof SbomApiError) {
+        setValidationError(`Ошибка сервера (${err.status}): ${err.message}`)
+      } else {
+        setValidationError("Не удалось выполнить валидацию")
+      }
+    } finally {
+      setIsValidating(false)
+    }
+  }, [bom, onValidationResults])
 
   const handleComponentChange = useCallback(
     (updated: CdxComponent) => {
@@ -125,17 +197,11 @@ export function SbomVisualEditor({
   )
 
   const handleAddComponent = useCallback(() => {
-    setNewComponentParentPath(selectedPath)
-    setIsAddingComponent(true)
-  }, [selectedPath])
-
-  const handleCancelAdd = useCallback(() => {
-    setIsAddingComponent(false)
-    setNewComponentParentPath(null)
+    setAddDialogOpen(true)
   }, [])
 
-  const handleSaveNewComponent = useCallback(
-    (newComp: CdxComponent) => {
+  const handleAddNewComponent = useCallback(
+    (newComp: CdxComponent, targetPath: number[] | null) => {
       // Auto-generate bom-ref if not provided
       if (!newComp["bom-ref"]) {
         newComp["bom-ref"] = generateUniqueBomRef(bom.components || [])
@@ -148,14 +214,12 @@ export function SbomVisualEditor({
 
       const newComponents = addComponentAtPath(
         bom.components || [],
-        newComponentParentPath,
+        targetPath,
         newComp,
       )
       onChange({ ...bom, components: newComponents })
-      setIsAddingComponent(false)
-      setNewComponentParentPath(null)
     },
-    [bom, newComponentParentPath, onChange],
+    [bom, onChange],
   )
 
   const handleBatchGostChange = useCallback(
@@ -165,38 +229,19 @@ export function SbomVisualEditor({
     [bom, onChange],
   )
 
-  const handleImportSbom = useCallback(
-    (importedComponent: CdxComponent) => {
-      // Ensure unique bom-ref
-      let uniqueBomRef = importedComponent["bom-ref"] || `imported-app-${Date.now()}`
-      const existingRefs = new Set<string>()
+  const handleAddGostFieldsToAll = useCallback(() => {
+    const components = bom.components || []
+    const missingCount = countComponentsMissingGost(components)
 
-      const collectRefs = (comps: CdxComponent[]) => {
-        comps.forEach((c) => {
-          if (c["bom-ref"]) existingRefs.add(c["bom-ref"])
-          if (c.components) collectRefs(c.components)
-        })
-      }
-      collectRefs(bom.components || [])
+    if (missingCount === 0) {
+      toast.info("Все компоненты уже содержат GOST-поля")
+      return
+    }
 
-      let counter = 0
-      while (existingRefs.has(uniqueBomRef)) {
-        counter++
-        uniqueBomRef = `imported-app-${Date.now()}-${counter}`
-      }
-
-      importedComponent["bom-ref"] = uniqueBomRef
-
-      // Insert at selected location or root
-      const newComponents = addComponentAtPath(
-        bom.components || [],
-        selectedPath,
-        importedComponent,
-      )
-      onChange({ ...bom, components: newComponents })
-    },
-    [bom, selectedPath, onChange],
-  )
+    const updatedComponents = components.map(addGostFieldsToComponent)
+    onChange({ ...bom, components: updatedComponents })
+    toast.success(`GOST-поля добавлены к ${missingCount} компонентам`)
+  }, [bom, onChange])
 
   const handleDeleteComponent = useCallback(
     (path: number[]) => {
@@ -242,15 +287,72 @@ export function SbomVisualEditor({
 
   return (
     <div className="space-y-4">
+      {/* Validation bar */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                Валидация CycloneDX + ФСТЭК
+              </span>
+              {validationResults && !isValidating && (
+                <div className="flex gap-2">
+                  {errors.length > 0 && (
+                    <Badge variant="destructive">
+                      {errors.length}{" "}
+                      {errors.length === 1 ? "ошибка" : "ошибок"}
+                    </Badge>
+                  )}
+                  {warnings.length > 0 && (
+                    <Badge variant="secondary">
+                      {warnings.length}{" "}
+                      {warnings.length === 1
+                        ? "предупреждение"
+                        : "предупреждений"}
+                    </Badge>
+                  )}
+                  {validationResults.issues.length === 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Валиден
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={handleValidate}
+              disabled={isValidating}
+              size="sm"
+            >
+              {isValidating ? "Проверка..." : "Проверить"}
+            </Button>
+          </div>
+          {validationError && (
+            <Alert variant="destructive" className="mt-3">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Ошибка</AlertTitle>
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
       <MetadataForm bom={bom} onChange={onChange} />
-      <div className="flex justify-end gap-2">
-        <SbomImportDialog
-          projectId={projectId ?? null}
-          savedSboms={savedSboms}
-          currentSbomId={currentSbomId}
-          onImport={handleImportSbom}
-          disabled={!projectId}
-        />
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAddGostFieldsToAll}
+          disabled={!bom.components || bom.components.length === 0}
+        >
+          <ListPlus className="h-4 w-4 mr-2" />
+          Добавить пустые GOST-поля
+        </Button>
         <BatchGostEditor
           components={bom.components || []}
           onChange={handleBatchGostChange}
@@ -265,20 +367,9 @@ export function SbomVisualEditor({
           onDeleteComponent={handleDeleteComponent}
           validationResults={validationResults}
         />
-        {isAddingComponent ? (
+        {selectedComponent ? (
           <ComponentForm
-            component={{
-              type: "library",
-              name: "",
-              "bom-ref": "",
-            }}
-            onChange={handleSaveNewComponent}
-            isNew={true}
-            parentPath={newComponentParentPath}
-            onCancel={handleCancelAdd}
-          />
-        ) : selectedComponent ? (
-          <ComponentForm
+            key={selectedPath?.join("-")}
             component={selectedComponent}
             onChange={handleComponentChange}
           />
@@ -290,6 +381,37 @@ export function SbomVisualEditor({
           </div>
         )}
       </div>
+
+      <AddComponentDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        components={bom.components || []}
+        selectedPath={selectedPath}
+        projectId={projectId}
+        savedSboms={savedSboms}
+        currentSbomId={currentSbomId}
+        onAdd={handleAddNewComponent}
+      />
+
+      {/* Validation issues list */}
+      {validationResults &&
+        !isValidating &&
+        validationResults.issues.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Результаты валидации ({validationResults.issues.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="max-h-[300px]">
+                {validationResults.issues.map((issue, i) => (
+                  <ValidationIssueRow key={i} issue={issue} />
+                ))}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )}
     </div>
   )
 }
