@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { HelpCircle, Save } from "lucide-react"
+import { useState, useCallback, useEffect, useRef } from "react"
+import { HelpCircle, Save, CheckCircle2, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -41,6 +41,8 @@ export default function SbomEditorPage() {
   const [explorerRefreshKey, setExplorerRefreshKey] = useState(0)
   const [hasProjects, setHasProjects] = useState(false)
   const [savedSboms, setSavedSboms] = useState<SbomMetadata[]>([])
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle")
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const refreshExplorer = useCallback(() => {
     setExplorerRefreshKey((prev) => prev + 1)
@@ -104,6 +106,7 @@ export default function SbomEditorPage() {
   const handleBomUpdate = useCallback((updatedBom: CycloneDxBom) => {
     setSbomData(updatedBom)
     setIsDirty(true)
+    setAutoSaveStatus("idle") // Reset status when user makes changes
   }, [])
 
   const handleUnified = useCallback((bom: CycloneDxBom) => {
@@ -114,23 +117,62 @@ export default function SbomEditorPage() {
     setActiveTab("view")
   }, [])
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (showToast = true) => {
     if (!selectedProjectId || !currentSbomId || !sbomData) return
 
     try {
       setSaving(true)
+      setAutoSaveStatus("saving")
       await updateSbom(selectedProjectId, currentSbomId, {
         document: sbomData as unknown as Record<string, unknown>,
       })
       setIsDirty(false)
-      toast.success("SBOM успешно сохранён")
+      setAutoSaveStatus("saved")
+      if (showToast) {
+        toast.success("SBOM успешно сохранён")
+      }
+      // Reset "saved" status after 2 seconds
+      setTimeout(() => {
+        setAutoSaveStatus("idle")
+      }, 2000)
     } catch (err) {
       console.error("Failed to save SBOM:", err)
-      toast.error("Ошибка сохранения: " + (err instanceof Error ? err.message : "Неизвестная ошибка"))
+      setAutoSaveStatus("idle")
+      if (showToast) {
+        toast.error("Ошибка сохранения: " + (err instanceof Error ? err.message : "Неизвестная ошибка"))
+      }
     } finally {
       setSaving(false)
     }
   }, [selectedProjectId, currentSbomId, sbomData])
+
+  // Auto-save with debounce
+  useEffect(() => {
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+
+    // Don't auto-save if:
+    // - No SBOM loaded
+    // - No project/sbom ID
+    // - Not dirty
+    if (!sbomData || !selectedProjectId || !currentSbomId || !isDirty) {
+      return
+    }
+
+    // Set new timeout for auto-save (2 seconds after last change)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      handleSave(false) // Don't show toast for auto-save
+    }, 2000)
+
+    // Cleanup
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current)
+      }
+    }
+  }, [sbomData, selectedProjectId, currentSbomId, isDirty, handleSave])
 
   const handleOpenSbomFromExplorer = useCallback(
     async (bom: CycloneDxBom, metadata: SbomMetadata, projectId: string) => {
@@ -315,19 +357,32 @@ export default function SbomEditorPage() {
               <h1 className="text-2xl font-bold tracking-tight">
                 SBOM Редактор
               </h1>
-              {isDirty && (
+              {autoSaveStatus === "saving" && (
+                <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Сохранение...
+                </Badge>
+              )}
+              {autoSaveStatus === "saved" && (
+                <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Сохранено
+                </Badge>
+              )}
+              {isDirty && autoSaveStatus === "idle" && (
                 <Badge variant="secondary" className="text-xs">
                   Изменён
                 </Badge>
               )}
-              {isDirty && currentSbomId && (
+              {currentSbomId && (
                 <Button
                   size="sm"
-                  onClick={handleSave}
-                  disabled={saving}
+                  onClick={() => handleSave(true)}
+                  disabled={saving || !isDirty}
+                  variant="outline"
                 >
                   <Save className="h-4 w-4 mr-1" />
-                  {saving ? "Сохранение..." : "Сохранить"}
+                  Сохранить
                 </Button>
               )}
             </div>
