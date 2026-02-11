@@ -241,6 +241,62 @@ def _validate_gost_fields(
     return issues
 
 
+def _validate_vcs_references(
+    document: dict[str, Any],
+) -> list[ValidationIssue]:
+    """Validate that components have VCS (version control system) references.
+
+    Rules:
+    - ERROR for type: "application" components without VCS (your own code must have VCS)
+    - WARNING for type: "library" components without VCS (external deps may not have VCS)
+    - Skip validation for type: "operating-system" and "framework"
+    """
+    issues: list[ValidationIssue] = []
+    components = document.get("components", [])
+
+    def check_vcs(comps: list[dict[str, Any]], base_path: str) -> None:
+        for i, comp in enumerate(comps):
+            path = f"{base_path}[{i}]"
+            comp_type = comp.get("type", "")
+            comp_name = comp.get("name", "?")
+
+            # Skip validation for operating-system and framework
+            if comp_type in ("operating-system", "framework"):
+                continue
+
+            # Check for VCS reference
+            external_refs = comp.get("externalReferences", [])
+            has_vcs = any(ref.get("type") == "vcs" for ref in external_refs)
+
+            if not has_vcs:
+                # ERROR for application components
+                if comp_type == "application":
+                    issues.append(
+                        ValidationIssue(
+                            level="error",
+                            message=f"Компонент '{comp_name}': Отсутствует ссылка на VCS (система контроля версий). Добавьте externalReferences с type='vcs'.",
+                            path=path,
+                        )
+                    )
+                # WARNING for library components
+                elif comp_type == "library":
+                    issues.append(
+                        ValidationIssue(
+                            level="warning",
+                            message=f"Компонент '{comp_name}': Отсутствует ссылка на VCS (система контроля версий). Добавьте externalReferences с type='vcs'.",
+                            path=path,
+                        )
+                    )
+
+            # Recursively check nested components
+            children = comp.get("components", [])
+            if children:
+                check_vcs(children, f"{path}.components")
+
+    check_vcs(components, "$.components")
+    return issues
+
+
 def validate_sbom(
     document: dict[str, Any], format: str = "oss"
 ) -> ValidateResponse:
@@ -266,6 +322,9 @@ def validate_sbom(
     # Step 3: GOST hierarchy checks
     issues.extend(_validate_gost_hierarchy(document))
     issues.extend(_validate_gost_fields(document))
+
+    # Step 4: VCS reference validation
+    issues.extend(_validate_vcs_references(document))
 
     has_errors = any(i.level == "error" for i in issues)
     spec_version = document.get("specVersion")

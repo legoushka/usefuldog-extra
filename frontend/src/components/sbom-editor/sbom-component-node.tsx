@@ -1,21 +1,29 @@
 "use client"
 
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { getGostProp, getComponentTypeLabel } from "@/lib/sbom-utils"
 import { GostBadge } from "./sbom-gost-badge"
 import type { CdxComponent } from "@/lib/sbom-types"
 
+export interface ComponentIssueCount {
+  errors: number
+  warnings: number
+}
+
 interface ComponentNodeProps {
   component: CdxComponent
   path: number[]
   selectedPath: number[] | null
   onSelect: (path: number[]) => void
+  onRequestDelete?: () => void
   isExpanded: boolean
   hasChildren: boolean
   onToggle: () => void
   depth: number
+  issueCount?: ComponentIssueCount
 }
 
 const typeBadgeColors: Record<string, string> = {
@@ -33,10 +41,12 @@ export function ComponentNode({
   path,
   selectedPath,
   onSelect,
+  onRequestDelete,
   isExpanded,
   hasChildren,
   onToggle,
   depth,
+  issueCount,
 }: ComponentNodeProps) {
   const isSelected =
     selectedPath !== null &&
@@ -46,11 +56,17 @@ export function ComponentNode({
   const attackSurface = getGostProp(component, "attackSurface")
   const securityFunction = getGostProp(component, "securityFunction")
 
+  const hasErrors = issueCount && issueCount.errors > 0
+  const hasWarnings = issueCount && issueCount.warnings > 0 && !hasErrors
+
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 py-1 px-2 rounded-md cursor-pointer text-sm hover:bg-accent/50 transition-colors",
+        "flex items-center gap-1.5 py-1 px-2 rounded-md cursor-pointer text-sm hover:bg-accent/50 transition-colors border-l-4 group",
         isSelected && "bg-accent",
+        hasErrors && "border-destructive",
+        hasWarnings && "border-yellow-500",
+        !hasErrors && !hasWarnings && "border-transparent",
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
       onClick={() => onSelect(path)}
@@ -95,8 +111,36 @@ export function ComponentNode({
       )}
 
       <div className="flex gap-1 ml-auto shrink-0">
+        {hasErrors && (
+          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+            {issueCount.errors} ош.
+          </Badge>
+        )}
+        {hasWarnings && (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 bg-yellow-50 border-yellow-500 text-yellow-700"
+          >
+            {issueCount.warnings} пр.
+          </Badge>
+        )}
         <GostBadge label="AS" value={attackSurface} />
         <GostBadge label="SF" value={securityFunction} />
+
+        {onRequestDelete && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation()
+              onRequestDelete()
+            }}
+            title="Удалить компонент"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        )}
       </div>
     </div>
   )

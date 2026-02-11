@@ -12,3 +12,5 @@ services:
     build: ./backends/python
     ports:
       - "8001:8001"
+    volumes:
+      - ./data:/data

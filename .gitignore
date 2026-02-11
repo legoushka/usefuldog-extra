@@ -9,3 +9,6 @@ __pycache__/
 .DS_Store
 test-sbom/
 test*.json
+backends/python/data/
+data/*
+!data/.gitkeep
