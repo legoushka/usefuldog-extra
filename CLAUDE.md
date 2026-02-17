@@ -4,15 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A local web tool suite for security and DevOps utilities. Currently implements a VEX-to-Confluence converter that transforms CycloneDX VEX JSON documents (from Dependency-Track) into rich Confluence wiki markup reports.
+A local web tool suite for security and DevOps utilities:
+
+- **VEX Конвертер** — transforms CycloneDX VEX JSON documents (from Dependency-Track) into Confluence wiki markup reports
+- **SBOM Редактор** — visual editor for CycloneDX SBOMs with GOST/FSTEC fields, validation (structural + VCS accessibility), unification, project-based persistence
 
 ## Architecture
 
-Frontend (Next.js, port 3000) proxies API calls to backend services via Next.js rewrites configured in `frontend/next.config.ts`. The proxy maps `/api/tools/vex/*` to the Python backend at port 8001. This avoids CORS issues and keeps the frontend as the single entry point.
+Frontend (Next.js, port 3000) proxies API calls to backend services via Next.js rewrites configured in `frontend/next.config.ts`. The proxy maps `/api/tools/vex/*`, `/api/tools/sbom/*` and `/api/projects/*` to the Python backend at port 8001. This avoids CORS issues and keeps the frontend as the single entry point.
 
 - **Frontend:** Next.js 16 + React 19 + shadcn/ui + Tailwind 4 + Recharts
-- **Python Backend:** FastAPI + Pydantic for VEX file conversion
-- **Deployment:** Docker Compose with multi-stage builds
+- **Python Backend:** FastAPI + Pydantic + httpx for VEX conversion, SBOM validation/unification, project storage
+- **Deployment:** Docker Compose with multi-stage builds, persistent volume for `/data`
 
 The `PYTHON_BACKEND_URL` env var controls the backend URL (defaults to `http://python-backend:8001` for Docker).
 
@@ -44,27 +47,52 @@ uv run --with-requirements requirements.txt pytest -v
 
 > **Note:** Используем `uv` вместо pip/venv. Не нужно создавать виртуальное окружение — `uv run` управляет зависимостями автоматически.
 
-## Key Data Flow
+## Key Data Flows
 
-1. User uploads a CycloneDX VEX JSON file via drag-and-drop (`upload-zone.tsx`)
-2. Frontend calls `uploadVexFile()` from `lib/api.ts` which POSTs to `/api/tools/vex/convert/vex`
-3. Next.js rewrites proxy the request to the Python backend's `POST /api/convert/vex`
-4. Backend parses the file with Pydantic models (`models/vex.py`), runs conversion (`converters/vex_to_confluence.py`)
-5. Response includes: Confluence wiki markup, aggregated stats, and vulnerability info list
-6. Frontend renders results: summary cards, severity pie chart, state bar chart, Confluence preview, raw markup
+### VEX Converter
+1. User uploads CycloneDX VEX JSON via drag-and-drop (`upload-zone.tsx`)
+2. Frontend POSTs to `/api/tools/vex/convert/vex` → proxy → `POST /api/convert/vex`
+3. Backend parses with Pydantic (`models/vex.py`), converts (`converters/vex_to_confluence.py`)
+4. Frontend renders: summary cards, charts, Confluence preview, raw markup
+
+### SBOM Editor
+1. User creates/opens a project, uploads or creates SBOM in the editor
+2. Visual editor (`sbom-visual-editor.tsx`) renders component tree with inline editing
+3. Auto-save via `useSbomAutoSave` hook → `PUT /api/projects/{id}/sboms/{sbom_id}`
+4. Validation: frontend POSTs to `/api/sbom/validate/json` → backend runs structural checks (`sbom_validator.py`) + async VCS accessibility checks via Git Smart HTTP protocol
+5. Results shown inline in component tree with error/warning/info levels
 
 ## Backend API
 
-- `POST /api/convert/vex` — Accepts multipart file upload of VEX JSON, returns `ConvertResponse` (markup + stats + vulnerabilities)
+### VEX
+- `POST /api/convert/vex` — Multipart VEX JSON upload → `ConvertResponse` (markup + stats + vulnerabilities)
+
+### SBOM
+- `POST /api/sbom/validate` — Validate SBOM file upload (structural + async VCS accessibility)
+- `POST /api/sbom/validate/json` — Validate SBOM from JSON body (used by editor)
+- `POST /api/sbom/unify` — Merge multiple SBOM files into one
+
+### Projects
+- `GET /api/projects` — List projects
+- `POST /api/projects` — Create project
+- `GET /api/projects/{id}` — Project details with SBOM list
+- `DELETE /api/projects/{id}` — Delete project and all SBOMs
+- `POST /api/projects/{id}/sboms` — Upload SBOM to project
+- `GET /api/projects/{id}/sboms/{sbom_id}` — Get SBOM content
+- `PUT /api/projects/{id}/sboms/{sbom_id}` — Update SBOM
+- `DELETE /api/projects/{id}/sboms/{sbom_id}` — Delete SBOM
+
+### Health
 - `GET /health` — Health check
 
 ## Frontend Component Organization
 
-- `src/app/` — Next.js App Router pages (dashboard at `/`, VEX converter at `/tools/vex-converter`)
+- `src/app/` — Next.js App Router pages (dashboard `/`, VEX converter `/tools/vex-converter`, SBOM editor `/tools/sbom-editor`)
 - `src/components/ui/` — shadcn/ui primitives (do not edit manually; managed by `shadcn` CLI)
-- `src/components/vex-converter/` — VEX tool-specific components (upload, results, charts, Confluence preview)
-- `src/lib/api.ts` — API client functions with TypeScript types matching backend response models
-- `confluence-preview.tsx` — Client-side renderer that converts Confluence wiki markup to HTML (supports status macros, panels, tables, expand sections, etc.)
+- `src/components/vex-converter/` — VEX tool components (upload, results, charts, Confluence preview)
+- `src/components/sbom-editor/` — SBOM editor components (visual editor, component tree/form, validation, unifier, file explorer, project selector)
+- `src/hooks/` — Custom hooks (`useSbomAutoSave`, `useSbomProject`, `useMobile`)
+- `src/lib/api.ts` — VEX API client; `sbom-api.ts` — SBOM API client; `sbom-types.ts` — CycloneDX TypeScript types; `sbom-utils.ts` — SBOM utility functions; `project-types.ts` — Project API types
 
 ## Процесс разработки
 
@@ -209,6 +237,9 @@ State: resolved `#22c55e`, exploitable `#ef4444`, in_triage `#f59e0b`, false_pos
 ## Conventions
 
 - Frontend uses `"use client"` directive for interactive components; layout and page files are server components where possible
-- Pydantic models in `models/vex.py` mirror the CycloneDX VEX schema structure; TypeScript types in `lib/api.ts` mirror the backend response
-- Test fixture at `test-fixtures/sample-vex.json` provides a real-world CycloneDX VEX document for manual testing
+- Pydantic models: `models/vex.py` (VEX schema), `models/sbom.py` (validation responses), `models/project.py` (project/SBOM metadata)
+- TypeScript types: `lib/sbom-types.ts` mirrors CycloneDX spec, `lib/api.ts` / `lib/sbom-api.ts` mirror backend responses
+- Backend validators: `converters/sbom_validator.py` — sync structural checks + async VCS accessibility; `converters/sbom_utils.py` — GOST property helpers
+- Test fixtures at `backends/python/tests/fixtures/` for various SBOM scenarios; `test-fixtures/sample-vex.json` for VEX
 - Next.js is configured with `output: "standalone"` for Docker deployment
+- Validation levels: `"error"` (structural failures), `"warning"` (missing VCS, GOST fields), `"info"` (confirmed VCS accessibility)

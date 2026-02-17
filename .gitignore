@@ -12,3 +12,4 @@ test*.json
 backends/python/data/
 data/*
 !data/.gitkeep
+gosts/
