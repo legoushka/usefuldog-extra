@@ -12,7 +12,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from converters.vex_to_confluence import convert_vex_to_confluence
-from converters.sbom_validator import validate_sbom
+from converters.sbom_validator import validate_sbom, validate_vcs_accessibility
 from converters.sbom_unifier import unify_sboms
 from models.vex import ConvertResponse, VexDocument
 from models.sbom import ValidateResponse, UnifyResponse
@@ -104,7 +104,10 @@ async def sbom_validate(file: UploadFile) -> ValidateResponse:
     try:
         content = await file.read()
         data = json.loads(content)
-        return validate_sbom(data)
+        base_result = validate_sbom(data)
+        vcs_issues = await validate_vcs_accessibility(data)
+        base_result.issues.extend(vcs_issues)
+        return base_result
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {exc}") from exc
     except Exception as exc:
@@ -115,7 +118,10 @@ async def sbom_validate(file: UploadFile) -> ValidateResponse:
 async def sbom_validate_json(request: ValidateJsonRequest) -> ValidateResponse:
     """Validate a CycloneDX SBOM from JSON body (from editor, no re-upload)."""
     try:
-        return validate_sbom(request.document, request.format)
+        base_result = validate_sbom(request.document, request.format)
+        vcs_issues = await validate_vcs_accessibility(request.document)
+        base_result.issues.extend(vcs_issues)
+        return base_result
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

@@ -16,7 +16,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { GostFields } from "./sbom-gost-fields"
-import type { CdxComponent, CdxExternalReference } from "@/lib/sbom-types"
+import { CheckCircle2, XCircle } from "lucide-react"
+import type { CdxComponent, CdxExternalReference, ValidationIssue } from "@/lib/sbom-types"
 
 interface ComponentFormProps {
   component: CdxComponent
@@ -24,6 +25,7 @@ interface ComponentFormProps {
   isNew?: boolean
   parentPath?: number[] | null
   onCancel?: () => void
+  vcsValidationIssue?: ValidationIssue | null
 }
 
 const COMPONENT_TYPES = [
@@ -49,6 +51,7 @@ export function ComponentForm({
   isNew = false,
   parentPath = null,
   onCancel,
+  vcsValidationIssue,
 }: ComponentFormProps) {
   const [localComponent, setLocalComponent] = useState<CdxComponent>(component)
 
@@ -181,7 +184,20 @@ export function ComponentForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">VCS (ссылка на репозиторий)</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs">VCS (ссылка на репозиторий)</Label>
+                {vcsValidationIssue && (
+                  vcsValidationIssue.level === "info" ? (
+                    <span title="Репозиторий доступен">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                    </span>
+                  ) : (
+                    <span title="Репозиторий недоступен">
+                      <XCircle className="h-3.5 w-3.5 text-red-500" />
+                    </span>
+                  )
+                )}
+              </div>
               <Input
                 value={
                   localComponent.externalReferences?.find(

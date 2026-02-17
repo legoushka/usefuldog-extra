@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
+import ipaddress
+import re
 from typing import Any
+from urllib.parse import urlparse
+
+import httpx
 
 from models.sbom import ValidationIssue, ValidateResponse
 from converters.sbom_utils import get_gost_prop, eval_prop
+
+_VCS_CHECK_TIMEOUT = 5.0
+_VCS_MAX_REDIRECTS = 3
 
 
 def _validate_structure(document: dict[str, Any]) -> list[ValidationIssue]:
@@ -285,17 +294,7 @@ def _validate_vcs_references(
             has_vcs = any(ref.get("type") == "vcs" for ref in external_refs)
 
             if not has_vcs:
-                # ERROR for application components
-                if comp_type == "application":
-                    issues.append(
-                        ValidationIssue(
-                            level="error",
-                            message=f"Компонент '{comp_name}': Отсутствует ссылка на VCS (система контроля версий). Добавьте externalReferences с type='vcs'.",
-                            path=path,
-                        )
-                    )
-                # WARNING for library components
-                elif comp_type == "library":
+                if comp_type in ("application", "library"):
                     issues.append(
                         ValidationIssue(
                             level="warning",
@@ -310,6 +309,174 @@ def _validate_vcs_references(
                 check_vcs(children, f"{path}.components")
 
     check_vcs(components, "$.components")
+    return issues
+
+
+def _is_safe_url(url: str) -> bool:
+    """Check if URL is safe for SSRF protection (HTTPS only, no private IPs)."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False
+
+    if parsed.scheme != "https":
+        return False
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+
+    # Reject localhost variants
+    if hostname in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+        return False
+
+    # Reject IP addresses (only allow hostnames)
+    try:
+        addr = ipaddress.ip_address(hostname)
+        # If it parses as IP, reject private/reserved ranges
+        if addr.is_private or addr.is_reserved or addr.is_loopback or addr.is_link_local:
+            return False
+        # Even public IPs are rejected — only hostnames allowed
+        return False
+    except ValueError:
+        pass  # Not an IP — good, it's a hostname
+
+    # Reject suspicious hostnames
+    if re.match(r"^(\d{1,3}\.){3}\d{1,3}$", hostname):
+        return False
+
+    return True
+
+
+def _normalize_vcs_url(url: str) -> str:
+    """Normalize VCS URL for Git Smart HTTP check."""
+    url = url.rstrip("/")
+    if url.endswith(".git"):
+        url = url[:-4]
+    return url
+
+
+async def _check_single_vcs(
+    client: httpx.AsyncClient,
+    url: str,
+    path: str,
+    comp_name: str,
+) -> ValidationIssue:
+    """Check a single VCS URL for accessibility via Git Smart HTTP protocol."""
+    normalized = _normalize_vcs_url(url)
+    check_url = f"{normalized}.git/info/refs?service=git-upload-pack"
+
+    try:
+        resp = await client.get(check_url)
+        content_type = resp.headers.get("content-type", "")
+
+        if (
+            resp.status_code == 200
+            and "application/x-git-upload-pack-advertisement" in content_type
+        ):
+            return ValidationIssue(
+                level="info",
+                message=f"Компонент '{comp_name}': VCS репозиторий доступен ({url})",
+                path=path,
+            )
+        else:
+            return ValidationIssue(
+                level="warning",
+                message=f"Компонент '{comp_name}': VCS репозиторий недоступен ({url}) — HTTP {resp.status_code}",
+                path=path,
+            )
+    except httpx.TimeoutException:
+        return ValidationIssue(
+            level="warning",
+            message=f"Компонент '{comp_name}': Таймаут при проверке VCS репозитория ({url})",
+            path=path,
+        )
+    except httpx.ConnectError:
+        return ValidationIssue(
+            level="warning",
+            message=f"Компонент '{comp_name}': Не удалось подключиться к VCS репозиторию ({url})",
+            path=path,
+        )
+    except Exception:
+        return ValidationIssue(
+            level="warning",
+            message=f"Компонент '{comp_name}': Ошибка при проверке VCS репозитория ({url})",
+            path=path,
+        )
+
+
+def _collect_vcs_urls(
+    components: list[dict[str, Any]],
+    base_path: str = "$.components",
+) -> list[tuple[str, str, str]]:
+    """Collect all VCS URLs from components with their paths and names.
+
+    Returns list of (url, json_path, component_name) tuples.
+    """
+    result: list[tuple[str, str, str]] = []
+
+    for i, comp in enumerate(components):
+        path = f"{base_path}[{i}]"
+        comp_name = comp.get("name", "?")
+        external_refs = comp.get("externalReferences", [])
+
+        for ref in external_refs:
+            if ref.get("type") == "vcs" and ref.get("url"):
+                result.append((ref["url"], path, comp_name))
+
+        children = comp.get("components", [])
+        if children:
+            result.extend(_collect_vcs_urls(children, f"{path}.components"))
+
+    return result
+
+
+async def validate_vcs_accessibility(
+    document: dict[str, Any],
+) -> list[ValidationIssue]:
+    """Validate that VCS URLs in components are accessible git repositories.
+
+    Uses Git Smart HTTP protocol to verify repository accessibility.
+    Only HTTPS URLs are checked (SSRF protection).
+    """
+    issues: list[ValidationIssue] = []
+    components = document.get("components", [])
+    if not components:
+        return issues
+
+    vcs_entries = _collect_vcs_urls(components)
+    if not vcs_entries:
+        return issues
+
+    # Filter out unsafe URLs
+    safe_entries: list[tuple[str, str, str]] = []
+    for url, path, name in vcs_entries:
+        if not _is_safe_url(url):
+            issues.append(
+                ValidationIssue(
+                    level="warning",
+                    message=f"Компонент '{name}': VCS URL пропущен — допускается только HTTPS ({url})",
+                    path=path,
+                )
+            )
+        else:
+            safe_entries.append((url, path, name))
+
+    if not safe_entries:
+        return issues
+
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(_VCS_CHECK_TIMEOUT),
+        follow_redirects=True,
+        max_redirects=_VCS_MAX_REDIRECTS,
+    ) as client:
+        tasks = [
+            _check_single_vcs(client, url, path, name)
+            for url, path, name in safe_entries
+        ]
+        results = await asyncio.gather(*tasks)
+        issues.extend(results)
+
     return issues
 
 

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class ValidationIssue(BaseModel):
     """A single validation issue (error or warning)."""
 
-    level: str  # "error" or "warning"
+    level: str  # "error", "warning", or "info"
     message: str
     path: str | None = None
 

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-02-17
+
+### Added
+- VCS repository accessibility check — validates that VCS URLs point to real git repos via Git Smart HTTP protocol
+- Async concurrent checks with `httpx.AsyncClient` and `asyncio.gather()`
+- SSRF protection: only HTTPS URLs allowed, private IPs and localhost rejected
+- "info" validation level for confirmed VCS repositories (green checkmarks)
+- Spinner animation on "Проверить" button during validation
+- "Подтверждено (N)" filter button in component tree for verified VCS repos
+- Inline VCS status indicator in component form (green check / red X)
+- Green border and `CheckCircle2` icon for info-level issues in component tree
+
+### Changed
+- Missing VCS on `application` components is now a warning (not error) — own product components may not have VCS
+- Removed bottom validation results card — inline validation in component tree is sufficient
+- Component tree filter buttons now show parent components when descendants have matching issues
+
+### Fixed
+- Validation filter hiding parent components whose children had issues
+
 ## [0.2.2] - 2026-02-11
 
 ### Added
@@ -118,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose deployment
 - Dark mode support
 
+[0.2.3]: https://github.com/legoushka/usefuldog-extra/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/legoushka/usefuldog-extra/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/legoushka/usefuldog-extra/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/legoushka/usefuldog-extra/compare/v0.1.0...v0.2.0

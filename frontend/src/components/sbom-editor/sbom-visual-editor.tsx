@@ -2,23 +2,22 @@
 
 import { useCallback, useState } from "react"
 import { toast } from "sonner"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   ShieldCheck,
   AlertCircle,
   CheckCircle2,
   ListPlus,
+  Loader2,
 } from "lucide-react"
 import { ComponentTree } from "./sbom-component-tree"
 import { ComponentForm } from "./sbom-component-form"
 import { MetadataForm } from "./sbom-metadata-form"
 import { BatchGostEditor } from "./sbom-batch-gost-editor"
 import { AddComponentDialog } from "./sbom-add-component-dialog"
-import { ValidationIssueRow } from "./sbom-validation-issue"
 import { getComponentByPath } from "@/lib/sbom-utils"
 import { validateSbomJson, SbomApiError } from "@/lib/sbom-api"
 import type { CycloneDxBom, CdxComponent, ValidateResponse } from "@/lib/sbom-types"
@@ -163,8 +162,21 @@ export function SbomVisualEditor({
     ? getComponentByPath(bom.components, selectedPath)
     : null
 
+  // Find VCS accessibility issue for selected component
+  const selectedVcsIssue = (() => {
+    if (!selectedPath || !validationResults) return null
+    const pathPrefix = `$.components${selectedPath.map((i) => `[${i}]`).join(".components")}`
+    return validationResults.issues.find(
+      (issue) =>
+        issue.path === pathPrefix &&
+        (issue.level === "info" || issue.level === "warning") &&
+        issue.message.includes("VCS репозиторий")
+    ) ?? null
+  })()
+
   const errors = validationResults?.issues.filter((i) => i.level === "error") || []
   const warnings = validationResults?.issues.filter((i) => i.level === "warning") || []
+  const infos = validationResults?.issues.filter((i) => i.level === "info") || []
 
   const handleValidate = useCallback(async () => {
     setIsValidating(true)
@@ -312,7 +324,15 @@ export function SbomVisualEditor({
                         : "предупреждений"}
                     </Badge>
                   )}
-                  {validationResults.issues.length === 0 && (
+                  {infos.length > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
+                    >
+                      {infos.length} подтверждено
+                    </Badge>
+                  )}
+                  {errors.length === 0 && warnings.length === 0 && infos.length === 0 && (
                     <Badge
                       variant="secondary"
                       className="bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300"
@@ -329,6 +349,9 @@ export function SbomVisualEditor({
               disabled={isValidating}
               size="sm"
             >
+              {isValidating && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
               {isValidating ? "Проверка..." : "Проверить"}
             </Button>
           </div>
@@ -372,6 +395,7 @@ export function SbomVisualEditor({
             key={selectedPath?.join("-")}
             component={selectedComponent}
             onChange={handleComponentChange}
+            vcsValidationIssue={selectedVcsIssue}
           />
         ) : (
           <div className="flex items-center justify-center border rounded-lg h-[500px]">
@@ -393,25 +417,6 @@ export function SbomVisualEditor({
         onAdd={handleAddNewComponent}
       />
 
-      {/* Validation issues list */}
-      {validationResults &&
-        !isValidating &&
-        validationResults.issues.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Результаты валидации ({validationResults.issues.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="max-h-[300px]">
-                {validationResults.issues.map((issue, i) => (
-                  <ValidationIssueRow key={i} issue={issue} />
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
     </div>
   )
 }

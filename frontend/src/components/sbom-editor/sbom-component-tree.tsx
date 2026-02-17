@@ -17,7 +17,7 @@ import { Search, Plus, AlertTriangle } from "lucide-react"
 import { ComponentNode, type ComponentIssueData } from "./sbom-component-node"
 import type { CdxComponent, ValidateResponse } from "@/lib/sbom-types"
 
-type ValidationFilter = "all" | "errors" | "warnings"
+type ValidationFilter = "all" | "errors" | "warnings" | "info"
 
 interface ComponentTreeProps {
   components: CdxComponent[]
@@ -49,9 +49,10 @@ function buildIssueMap(
     const pathKey = extractComponentPath(issue.path)
     if (!pathKey) continue
 
-    const existing = map.get(pathKey) || { errors: 0, warnings: 0, issues: [] }
+    const existing = map.get(pathKey) || { errors: 0, warnings: 0, infos: 0, issues: [] }
     if (issue.level === "error") existing.errors++
-    else existing.warnings++
+    else if (issue.level === "warning") existing.warnings++
+    else if (issue.level === "info") existing.infos++
     existing.issues.push(issue)
     map.set(pathKey, existing)
   }
@@ -106,6 +107,15 @@ export function ComponentTree({
     () =>
       Array.from(issueMap.values()).reduce(
         (sum, count) => sum + count.warnings,
+        0,
+      ),
+    [issueMap],
+  )
+
+  const totalInfos = useMemo(
+    () =>
+      Array.from(issueMap.values()).reduce(
+        (sum, count) => sum + count.infos,
         0,
       ),
     [issueMap],
@@ -169,14 +179,24 @@ export function ComponentTree({
         }
       }
 
-      // Validation filter
+      // Validation filter — check self and descendants
       if (validationFilter !== "all") {
-        const data = issueMap.get(pathKey)
-        if (!data) return false
-
-        if (validationFilter === "errors" && data.errors === 0) return false
-        if (validationFilter === "warnings" && data.warnings === 0)
+        const matchesIssueFilter = (d: ComponentIssueData | undefined): boolean => {
+          if (!d) return false
+          if (validationFilter === "errors") return d.errors > 0
+          if (validationFilter === "warnings") return d.warnings > 0
+          if (validationFilter === "info") return d.infos > 0
           return false
+        }
+
+        const selfMatches = matchesIssueFilter(issueMap.get(pathKey))
+        if (!selfMatches) {
+          // Check if any descendant has matching issues
+          const hasDescendantMatch = Array.from(issueMap.entries()).some(
+            ([key, data]) => key.startsWith(pathKey + "-") && matchesIssueFilter(data),
+          )
+          if (!hasDescendantMatch) return false
+        }
       }
 
       return true
@@ -248,8 +268,8 @@ export function ComponentTree({
             </Button>
           </div>
 
-        {validationResults && (totalErrors > 0 || totalWarnings > 0) && (
-          <div className="flex gap-2">
+        {validationResults && (totalErrors > 0 || totalWarnings > 0 || totalInfos > 0) && (
+          <div className="flex gap-2 flex-wrap">
             <Button
               size="sm"
               variant={validationFilter === "all" ? "default" : "outline"}
@@ -278,6 +298,16 @@ export function ComponentTree({
                 className="h-7 text-xs"
               >
                 Предупреждения ({totalWarnings})
+              </Button>
+            )}
+            {totalInfos > 0 && (
+              <Button
+                size="sm"
+                variant={validationFilter === "info" ? "default" : "outline"}
+                onClick={() => setValidationFilter("info")}
+                className="h-7 text-xs text-green-700 dark:text-green-400"
+              >
+                Подтверждено ({totalInfos})
               </Button>
             )}
           </div>

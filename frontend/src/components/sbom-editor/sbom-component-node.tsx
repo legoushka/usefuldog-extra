@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, Trash2, AlertCircle, AlertTriangle } from "lucide-react"
+import { ChevronRight, Trash2, AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -11,6 +11,7 @@ import type { CdxComponent, ValidationIssue } from "@/lib/sbom-types"
 export interface ComponentIssueData {
   errors: number
   warnings: number
+  infos: number
   issues: ValidationIssue[]
 }
 
@@ -59,6 +60,7 @@ export function ComponentNode({
 
   const hasErrors = issueData && issueData.errors > 0
   const hasWarnings = issueData && issueData.warnings > 0 && !hasErrors
+  const hasInfoOnly = issueData && issueData.infos > 0 && !hasErrors && !hasWarnings
 
   return (
     <div>
@@ -68,7 +70,8 @@ export function ComponentNode({
           isSelected && "bg-accent",
           hasErrors && "border-destructive",
           hasWarnings && "border-yellow-500",
-          !hasErrors && !hasWarnings && "border-transparent",
+          hasInfoOnly && "border-green-500",
+          !hasErrors && !hasWarnings && !hasInfoOnly && "border-transparent",
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => onSelect(path)}
@@ -144,15 +147,17 @@ export function ComponentNode({
               key={i}
               className={cn(
                 "flex items-start gap-1.5 text-xs",
-                issue.level === "error"
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-yellow-600 dark:text-yellow-400",
+                issue.level === "error" && "text-red-600 dark:text-red-400",
+                issue.level === "warning" && "text-yellow-600 dark:text-yellow-400",
+                issue.level === "info" && "text-green-600 dark:text-green-400",
               )}
             >
               {issue.level === "error" ? (
                 <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
-              ) : (
+              ) : issue.level === "warning" ? (
                 <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+              ) : (
+                <CheckCircle2 className="h-3 w-3 shrink-0 mt-0.5" />
               )}
               <span>{issue.message}</span>
             </div>

@@ -104,7 +104,7 @@ export interface GostProperties {
 
 // API response types
 export interface ValidationIssue {
-  level: "error" | "warning"
+  level: "error" | "warning" | "info"
   message: string
   path?: string
 }
